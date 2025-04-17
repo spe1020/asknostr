@@ -3,10 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import { NostrLoginProvider } from '@nostrify/react/login';
+import AppRouter from './AppRouter';
 
 // AI: do not modify this relay list
 const defaultRelays = [
@@ -17,24 +15,23 @@ const defaultRelays = [
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <NostrLoginProvider storageKey='nostr:login'>
-    <NostrProvider relays={defaultRelays}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </NostrProvider>
-  </NostrLoginProvider>
-);
+// NOTE: This file should normally not be modified unless you are adding a new provider.
+// To add new routes, edit the AppRouter.tsx file.
+
+export function App() {
+  return (
+    <NostrLoginProvider storageKey='nostr:login'>
+      <NostrProvider relays={defaultRelays}>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppRouter />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </NostrProvider>
+    </NostrLoginProvider>
+  );
+}
 
 export default App;
