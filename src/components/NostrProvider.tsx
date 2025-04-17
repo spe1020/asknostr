@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 
 interface NostrProviderProps {
   children: React.ReactNode;
-  relays: `wss://${string}`[];
+  relays: string[];
 }
 
 const NostrProvider: React.FC<NostrProviderProps> = (props) => {
