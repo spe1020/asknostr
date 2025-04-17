@@ -150,6 +150,30 @@ export function MyComponent() {
 
 The `useCurrentUser` hook should be used to ensure that the user is logged in before they are able to publish Nostr events.
 
+### Nostr Login
+
+Nostr supports several types of logins:
+
+1. Login with nsec
+2. Login with browser extension
+3. Login with bunker URI
+
+Functions to log in with each of these methods are exposed by the `useLoginActions` hook:
+
+```tsx
+function MyComponent() {
+  const login = useLoginActions();
+
+  login.nsec(nsec); // login by the user pasting their secret key
+  login.bunker(uri); // login by the user pasting a bunker URI
+  login.extension(); // login with a NIP-07 browser extension
+
+  return (
+    <div>{/* ... */}</div>
+  );
+}
+```
+
 ## Development Practices
 
 - Uses React Query for data fetching and caching

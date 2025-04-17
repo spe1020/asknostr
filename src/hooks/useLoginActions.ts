@@ -5,7 +5,7 @@ import { NLogin, useNostrLogin } from '@nostrify/react/login';
 
 export function useLoginActions() {
   const { nostr } = useNostr();
-  const { addLogin } = useNostrLogin();
+  const { logins, addLogin, removeLogin } = useNostrLogin();
 
   return {
     // Login with a Nostr secret key
@@ -23,5 +23,12 @@ export function useLoginActions() {
       const login = await NLogin.fromExtension();
       addLogin(login);
     },
+    // Log out the current user
+    async logout(): Promise<void> {
+      const login = logins[0];
+      if (login) {
+        removeLogin(login.id);
+      }
+    }
   };
 }
