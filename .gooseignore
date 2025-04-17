@@ -1,0 +1,7 @@
+.npmrc
+src/vite-env.d.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+postcss.config.js
+vite.config.ts
