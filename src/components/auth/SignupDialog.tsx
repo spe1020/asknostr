@@ -1,3 +1,6 @@
+// NOTE: This file is stable and usually should not be modified.
+// It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
+
 import React, { useState } from 'react';
 import { Download, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
