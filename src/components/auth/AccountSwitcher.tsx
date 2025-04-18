@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, LogOut, User, UserPlus } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,13 +49,27 @@ export function AccountSwitcher() {
 
   if (!isLoggedIn) {
     return (
-      <Button
-        onClick={() => setLoginDialogOpen(true)}
-        className='flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground w-full font-medium transition-all hover:bg-primary/90 animate-scale-in'
-      >
-        <User className='w-4 h-4' />
-        <span>Log in</span>
-      </Button>
+      <>
+        <Button
+          onClick={() => setLoginDialogOpen(true)}
+          className='flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground w-full font-medium transition-all hover:bg-primary/90 animate-scale-in'
+        >
+          <User className='w-4 h-4' />
+          <span>Log in</span>
+        </Button>
+
+        <LoginForm
+          isOpen={loginDialogOpen} 
+          onClose={() => setLoginDialogOpen(false)} 
+          onLogin={handleLogin}
+          onSignup={() => setSignupDialogOpen(true)}
+        />
+
+        <SignupForm
+          isOpen={signupDialogOpen}
+          onClose={() => setSignupDialogOpen(false)}
+        />
+      </>
     );
   }
 
