@@ -13,7 +13,15 @@ const defaultRelays = [
   'wss://ditto.pub/relay',
 ];
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 60000, // 1 minute
+      gcTime: Infinity,
+    },
+  },
+});
 
 // NOTE: This file should normally not be modified unless you are adding a new provider.
 // To add new routes, edit the AppRouter.tsx file.
