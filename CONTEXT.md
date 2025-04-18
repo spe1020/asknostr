@@ -152,25 +152,52 @@ The `useCurrentUser` hook should be used to ensure that the user is logged in be
 
 ### Nostr Login
 
-Nostr supports several types of logins:
-
-1. Login with nsec
-2. Login with browser extension
-3. Login with bunker URI
-
-Functions to log in with each of these methods are exposed by the `useLoginActions` hook:
+To add Nostr login functionality, use the included `LoginForm` and `SignupForm` dialog components. For example:
 
 ```tsx
-function MyComponent() {
-  const login = useLoginActions();
+import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
+import { Button } from "@/components/ui/button";
 
-  login.nsec(nsec); // login by the user pasting their secret key
-  login.bunker(uri); // login by the user pasting a bunker URI
-  login.extension(); // login with a NIP-07 browser extension
+function MyComponent() {
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+
+  const handleLogin = () => {
+    setLoginDialogOpen(false);
+    setSignupDialogOpen(false);
+  };
 
   return (
-    <div>{/* ... */}</div>
+    <div>
+      <Button onClick={showLoginDialog}>Log in</Button>
+      <Button onClick={showSignupDialog}>Sign up</Button>
+
+      <LoginForm
+        isOpen={loginDialogOpen} 
+        onClose={() => setLoginDialogOpen(false)} 
+        onLogin={handleLogin}
+        onSignup={showSignupDialog}
+      />
+
+      <SignupForm
+        isOpen={signupDialogOpen}
+        onClose={() => setSignupDialogOpen(false)}
+      />
+    </div>
   );
+}
+```
+
+To access the currently-logged-in account, use the `useCurrentUser` hook, eg:
+
+```typescript
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+
+function MyComponent() {
+  const { user } = useCurrentUser();
+
+  // ...
 }
 ```
 
