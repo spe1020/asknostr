@@ -1,0 +1,34 @@
+version: 1.0.0
+title: Create Nostr App
+description: Create a Nostr application with the mkstack template.
+instructions: This project is a blank template. Your job is to craft it into a Nostr app according to the user's vision.
+extensions:
+- type: builtin
+  name: developer
+  display_name: Developer Tools
+  timeout: 300
+  bundled: true
+- type: stdio
+  name: fetch
+  cmd: uvx
+  args:
+  - mcp-server-fetch
+  envs: {}
+  timeout: 10
+  description: null
+  bundled: null
+- type: stdio
+  name: nostr
+  cmd: deno
+  args:
+  - run
+  - -A
+  - jsr:@nostrbook/mcp
+  envs: {}
+  timeout: 10
+  description: null
+  bundled: null
+activities:
+- Customize Tailwind theme
+author:
+  contact: alex
