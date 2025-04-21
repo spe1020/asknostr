@@ -1,3 +1,6 @@
+// NOTE: This file is stable and usually should not be modified.
+// It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
+
 import React from 'react';
 import { ChevronDown, LogOut, UserPlus } from 'lucide-react';
 import {
