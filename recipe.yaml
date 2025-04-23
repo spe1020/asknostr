@@ -1,7 +1,7 @@
 version: 1.0.0
 title: Nostr Client Development
 description: A recipe for building Nostr client applications
-instructions: Create a Nostr client application according to the user's needs.
+instructions: Create a Nostr client application according to the user's request.
 extensions:
   - type: builtin
     name: developer
