@@ -1,5 +1,6 @@
 {
-  "servers": {
+  "model": "claude-3.7-sonnet",
+  "mcpServers": {
     "js-dev": {
       "type": "stdio",
       "command": "npx",
