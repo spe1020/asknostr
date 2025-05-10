@@ -218,6 +218,60 @@ function MyComponent() {
 
 The `LoginArea` component displays a "Log in" button when the user is logged out, and changes to an account switcher once the user is logged in. It handles all the login-related UI and interactions internally, including displaying login dialogs and switching between accounts.
 
+## `npub`, `naddr`, and other Nostr addresses
+
+Nostr defines a set identifiers in NIP-19. Their prefixes:
+
+- `npub`: public keys
+- `nsec`: private keys
+- `note`: note ids
+- `nprofile`: a nostr profile
+- `nevent`: a nostr event
+- `naddr`: a nostr replaceable event coordinate
+- `nrelay`: a nostr relay (deprecated)
+
+NIP-19 identifiers include a prefix, the number "1", then a base32-encoded data string.
+
+### Use in Filters
+
+The base Nostr protocol uses hex string identifiers for filtering by event IDs, pubkeys, and signatures. Nostr filters only accept hex strings.
+
+```ts
+// ❌ Wrong: naddr is not decoded
+const events = await nostr.query(
+  [{ ids: [naddr] }],
+  { signal }
+);
+```
+
+Corrected example:
+
+```ts
+// Import nip19 from nostr-tools
+import { nip19 } from 'nostr-tools';
+
+// Decode a NIP-19 identifier
+const decoded = nip19.decode(value);
+
+// Optional: guard certain types
+if (decoded.type !== 'naddr') {
+  throw new Error('Invalid stack ID');
+}
+
+// Get the addr object
+const naddr = decoded.data;
+
+// ✅ Correct: naddr is expanded into the correct filter
+const events = await nostr.query(
+  [{
+    kinds: [naddr.kind],
+    authors: [naddr.pubkey],
+    '#d': [naddr.identifier],
+  }],
+  { signal }
+);
+```
+
 ## Development Practices
 
 - Uses React Query for data fetching and caching
