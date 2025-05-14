@@ -234,7 +234,7 @@ NIP-19 identifiers include a prefix, the number "1", then a base32-encoded data 
 
 ### Use in Filters
 
-The base Nostr protocol uses hex string identifiers for filtering by event IDs, pubkeys, and signatures. Nostr filters only accept hex strings.
+The base Nostr protocol uses hex string identifiers when filtering by event IDs and pubkeys. Nostr filters only accept hex strings.
 
 ```ts
 // ❌ Wrong: naddr is not decoded
@@ -253,9 +253,9 @@ import { nip19 } from 'nostr-tools';
 // Decode a NIP-19 identifier
 const decoded = nip19.decode(value);
 
-// Optional: guard certain types
+// Optional: guard certain types (depending on the use-case)
 if (decoded.type !== 'naddr') {
-  throw new Error('Invalid stack ID');
+  throw new Error('Unsupported Nostr identifier');
 }
 
 // Get the addr object
