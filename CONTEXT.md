@@ -272,6 +272,26 @@ const events = await nostr.query(
 );
 ```
 
+## Edit Profile
+
+To include an Edit Profile form, place the `EditProfileForm` component in the project:
+
+```tsx
+import { EditProfileForm } from "@/components/EditProfileForm";
+
+function EditProfilePage() {
+  return (
+    <div>
+      {/* you may want to wrap this in a layout or include other components depending on the project ... */}
+
+      <EditProfileForm />
+    </div>
+  );
+}
+```
+
+The `EditProfileForm` component displays just the form. It requires no props, and will "just work" automatically.
+
 ## Development Practices
 
 - Uses React Query for data fetching and caching

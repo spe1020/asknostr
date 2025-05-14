@@ -38,11 +38,11 @@ export function useCurrentUser() {
   }, [logins, loginToUser]);
 
   const user = users[0] as NUser | undefined;
-  const data = useAuthor(user?.pubkey);
+  const author = useAuthor(user?.pubkey);
 
   return {
     user,
-    data,
     users,
+    ...author.data,
   };
 }
