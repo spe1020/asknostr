@@ -292,6 +292,30 @@ function EditProfilePage() {
 
 The `EditProfileForm` component displays just the form. It requires no props, and will "just work" automatically.
 
+## Uploading Files
+
+Use the `useUploadFile` hook to upload files.
+
+```tsx
+import { useUploadFile } from "@/hooks/useUploadFile";
+
+function MyComponent() {
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
+
+  const handleUpload = async (file: File) => {
+    try {
+      // The first tuple in the array contains the URL
+      const [[_, url]] = await uploadFile(file);
+      // ...use the url
+    } catch (error) {
+      // ...handle errors
+    }
+  };
+
+  // ...rest of component
+}
+```
+
 ## Development Practices
 
 - Uses React Query for data fetching and caching

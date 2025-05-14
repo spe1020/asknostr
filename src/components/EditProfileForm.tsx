@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -17,15 +17,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { NSchema as n, type NostrMetadata } from '@nostrify/nostrify';
 import { useQueryClient } from '@tanstack/react-query';
+import { useUploadFile } from '@/hooks/useUploadFile';
 
 export const EditProfileForm: React.FC = () => {
   const queryClient = useQueryClient();
 
   const { user, metadata } = useCurrentUser();
   const { mutateAsync: publishEvent, isPending } = useNostrPublish();
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { toast } = useToast();
 
   // Initialize the form with default values
@@ -56,6 +58,26 @@ export const EditProfileForm: React.FC = () => {
       });
     }
   }, [metadata, form]);
+
+  // Handle file uploads for profile picture and banner
+  const uploadPicture = async (file: File, field: 'picture' | 'banner') => {
+    try {
+      // The first tuple in the array contains the URL
+      const [[_, url]] = await uploadFile(file);
+      form.setValue(field, url);
+      toast({
+        title: 'Success',
+        description: `${field === 'picture' ? 'Profile picture' : 'Banner'} uploaded successfully`,
+      });
+    } catch (error) {
+      console.error(`Failed to upload ${field}:`, error);
+      toast({
+        title: 'Error',
+        description: `Failed to upload ${field === 'picture' ? 'profile picture' : 'banner'}. Please try again.`,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const onSubmit = async (values: NostrMetadata) => {
     if (!user) {
@@ -148,16 +170,14 @@ export const EditProfileForm: React.FC = () => {
             control={form.control}
             name="picture"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Profile Picture URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com/profile.jpg" {...field} />
-                </FormControl>
-                <FormDescription>
-                  URL to your profile picture.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
+              <ImageUploadField
+                field={field}
+                label="Profile Picture"
+                placeholder="https://example.com/profile.jpg"
+                description="URL to your profile picture. You can upload an image or provide a URL."
+                previewType="square"
+                onUpload={(file) => uploadPicture(file, 'picture')}
+              />
             )}
           />
 
@@ -165,16 +185,14 @@ export const EditProfileForm: React.FC = () => {
             control={form.control}
             name="banner"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Banner Image URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com/banner.jpg" {...field} />
-                </FormControl>
-                <FormDescription>
-                  URL to a wide banner image for your profile.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
+              <ImageUploadField
+                field={field}
+                label="Banner Image"
+                placeholder="https://example.com/banner.jpg"
+                description="URL to a wide banner image for your profile. You can upload an image or provide a URL."
+                previewType="wide"
+                onUpload={(file) => uploadPicture(file, 'banner')}
+              />
             )}
           />
         </div>
@@ -239,14 +257,93 @@ export const EditProfileForm: React.FC = () => {
         <Button 
           type="submit" 
           className="w-full md:w-auto" 
-          disabled={isPending}
+          disabled={isPending || isUploading}
         >
-          {isPending && (
+          {(isPending || isUploading) && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
           Save Profile
         </Button>
       </form>
     </Form>
+  );
+};
+
+// Reusable component for image upload fields
+interface ImageUploadFieldProps {
+  field: {
+    value: string | undefined;
+    onChange: (value: string) => void;
+    name: string;
+    onBlur: () => void;
+  };
+  label: string;
+  placeholder: string;
+  description: string;
+  previewType: 'square' | 'wide';
+  onUpload: (file: File) => void;
+}
+
+const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
+  field,
+  label,
+  placeholder,
+  description,
+  previewType,
+  onUpload,
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <FormItem>
+      <FormLabel>{label}</FormLabel>
+      <div className="flex flex-col gap-2">
+        <FormControl>
+          <Input
+            placeholder={placeholder}
+            name={field.name}
+            value={field.value ?? ''}
+            onChange={e => field.onChange(e.target.value)}
+            onBlur={field.onBlur}
+          />
+        </FormControl>
+        <div className="flex items-center gap-2">
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onUpload(file);
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Image
+          </Button>
+          {field.value && (
+            <div className={`h-10 ${previewType === 'square' ? 'w-10' : 'w-24'} rounded overflow-hidden`}>
+              <img 
+                src={field.value} 
+                alt={`${label} preview`} 
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+      <FormDescription>
+        {description}
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
   );
 };
