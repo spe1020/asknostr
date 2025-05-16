@@ -304,7 +304,8 @@ function MyComponent() {
 
   const handleUpload = async (file: File) => {
     try {
-      // The first tuple in the array contains the URL
+      // Provides an array of NIP-94 compatible tags
+      // The first tag in the array contains the URL
       const [[_, url]] = await uploadFile(file);
       // ...use the url
     } catch (error) {
@@ -314,6 +315,27 @@ function MyComponent() {
 
   // ...rest of component
 }
+```
+
+To attach files to kind 1 events, each file's URL should be appended to the event's `content`, and an `imeta` tag should be added for each file. For kind 0 events, the URL by itself can be used in relevant fields of the JSON content.
+
+## Encryption and Decryption
+
+The logged-in user has a `signer` object (matching the NIP-07 signer interface) that can be used for encryption and decryption.
+
+```ts
+// Get the current user
+const { user } = useCurrentUser();
+
+// Optional guard to check that nip44 is available
+if (!user.signer.nip44) {
+  throw new Error("Please upgrade your signer extension to a version that supports NIP-44 encryption");
+}
+
+// Encrypt message to self
+const encrypted = await user.signer.nip44.encrypt(user.pubkey, "hello world");
+// Decrypt message to self
+const decrypted = await user.signer.nip44.decrypt(user.pubkey, encrypted) // "hello world"
 ```
 
 ## Development Practices
