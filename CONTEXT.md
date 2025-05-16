@@ -218,7 +218,7 @@ function MyComponent() {
 
 The `LoginArea` component displays a "Log in" button when the user is logged out, and changes to an account switcher once the user is logged in. It handles all the login-related UI and interactions internally, including displaying login dialogs and switching between accounts. It should not be wrapped in any conditional logic.
 
-## `npub`, `naddr`, and other Nostr addresses
+### `npub`, `naddr`, and other Nostr addresses
 
 Nostr defines a set identifiers in NIP-19. Their prefixes:
 
@@ -232,7 +232,7 @@ Nostr defines a set identifiers in NIP-19. Their prefixes:
 
 NIP-19 identifiers include a prefix, the number "1", then a base32-encoded data string.
 
-### Use in Filters
+#### Use in Filters
 
 The base Nostr protocol uses hex string identifiers when filtering by event IDs and pubkeys. Nostr filters only accept hex strings.
 
@@ -272,7 +272,7 @@ const events = await nostr.query(
 );
 ```
 
-## Edit Profile
+### Nostr Edit Profile
 
 To include an Edit Profile form, place the `EditProfileForm` component in the project:
 
@@ -292,7 +292,7 @@ function EditProfilePage() {
 
 The `EditProfileForm` component displays just the form. It requires no props, and will "just work" automatically.
 
-## Uploading Files
+### Uploading Files on Nostr
 
 Use the `useUploadFile` hook to upload files.
 
@@ -319,7 +319,7 @@ function MyComponent() {
 
 To attach files to kind 1 events, each file's URL should be appended to the event's `content`, and an `imeta` tag should be added for each file. For kind 0 events, the URL by itself can be used in relevant fields of the JSON content.
 
-## Encryption and Decryption
+### Nostr Encryption and Decryption
 
 The logged-in user has a `signer` object (matching the NIP-07 signer interface) that can be used for encryption and decryption.
 
