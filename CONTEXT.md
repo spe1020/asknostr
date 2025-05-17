@@ -338,6 +338,26 @@ const encrypted = await user.signer.nip44.encrypt(user.pubkey, "hello world");
 const decrypted = await user.signer.nip44.decrypt(user.pubkey, encrypted) // "hello world"
 ```
 
+### Rendering Kind 1 Text
+
+If you need to render kind 1 text, use the `NoteContent` component:
+
+```tsx
+import { NoteContent } from "@/components/NoteContent";
+
+export function Post(/* ...props */) {
+  // ...
+
+  return (
+    <CardContent className="pb-2">
+      <div className="whitespace-pre-wrap break-words">
+        <NoteContent event={post} className="text-sm" />
+      </div>
+    </CardContent>
+  );
+}
+```
+
 ## Development Practices
 
 - Uses React Query for data fetching and caching
