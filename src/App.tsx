@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NostrLoginProvider } from '@nostrify/react/login';
 import AppRouter from './AppRouter';
+import { useLocation } from 'react-router-dom';
 
 // DO NOT MODIFY THIS RELAY LIST UNLESS EXPLICITLY REQUESTED
 const defaultRelays = [
@@ -27,6 +28,8 @@ const queryClient = new QueryClient({
 });
 
 export function App() {
+  const location = useLocation();
+
   return (
     <NostrLoginProvider storageKey='nostr:login'>
       <NostrProvider relays={defaultRelays}>

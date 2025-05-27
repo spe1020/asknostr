@@ -377,7 +377,7 @@ export function Post(/* ...props */) {
 Whenever you modify code, you should test your changes after you're finished by running:
 
 ```bash
-npm run ci
+npm run test
 ```
 
 This command will typecheck the code and attempt to build it.
