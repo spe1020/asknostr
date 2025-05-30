@@ -2,6 +2,7 @@
 // To add new routes, edit the AppRouter.tsx file.
 
 import NostrProvider from '@/components/NostrProvider'
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,17 +29,19 @@ const queryClient = new QueryClient({
 
 export function App() {
   return (
-    <NostrLoginProvider storageKey='nostr:login'>
-      <NostrProvider relays={defaultRelays}>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppRouter />
-          </TooltipProvider>
-        </QueryClientProvider>
-      </NostrProvider>
-    </NostrLoginProvider>
+    <ThemeProvider defaultTheme="system">
+      <NostrLoginProvider storageKey='nostr:login'>
+        <NostrProvider relays={defaultRelays}>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppRouter />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </NostrProvider>
+      </NostrLoginProvider>
+    </ThemeProvider>
   );
 }
 
