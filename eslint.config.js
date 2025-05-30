@@ -3,6 +3,8 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import htmlEslint from "@html-eslint/eslint-plugin";
+import htmlParser from "@html-eslint/parser";
 import customRules from "./eslint-rules/index.js";
 
 export default tseslint.config(
@@ -27,6 +29,20 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
       "custom/no-placeholder-comments": "error",
+    },
+  },
+  {
+    files: ["**/*.html"],
+    plugins: {
+      "@html-eslint": htmlEslint,
+    },
+    languageOptions: {
+      parser: htmlParser,
+    },
+    rules: {
+      "@html-eslint/require-title": "error",
+      "@html-eslint/require-meta-charset": "error",
+      "@html-eslint/require-meta-viewport": "error",
     },
   }
 );
