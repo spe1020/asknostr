@@ -35,6 +35,7 @@ export default tseslint.config(
     files: ["**/*.html"],
     plugins: {
       "@html-eslint": htmlEslint,
+      "custom": customRules,
     },
     languageOptions: {
       parser: htmlParser,
@@ -43,6 +44,7 @@ export default tseslint.config(
       "@html-eslint/require-title": "error",
       "@html-eslint/require-meta-charset": "error",
       "@html-eslint/require-meta-viewport": "error",
+      "custom/require-webmanifest": "error",
     },
   }
 );
