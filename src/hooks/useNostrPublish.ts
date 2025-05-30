@@ -1,21 +1,16 @@
 import { useNostr } from "@nostrify/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 
 import { useCurrentUser } from "./useCurrentUser";
 
-interface EventTemplate {
-  kind: number;
-  content?: string;
-  tags?: string[][];
-  created_at?: number;
-}
+import type { NostrEvent } from "@nostrify/nostrify";
 
-export function useNostrPublish() {
+export function useNostrPublish(): UseMutationResult<NostrEvent> {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
 
   return useMutation({
-    mutationFn: async (t: EventTemplate) => {
+    mutationFn: async (t: Omit<NostrEvent, 'id' | 'pubkey' | 'sig'>) => {
       if (user) {
         const tags = t.tags ?? [];
 
@@ -33,6 +28,7 @@ export function useNostrPublish() {
         });
 
         await nostr.event(event, { signal: AbortSignal.timeout(5000) });
+        return event;
       } else {
         throw new Error("User is not logged in");
       }
