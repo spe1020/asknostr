@@ -14,6 +14,9 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    onConsoleLog(log) {
+      return !log.includes("React Router Future Flag Warning");
+    },
   },
   resolve: {
     alias: {
