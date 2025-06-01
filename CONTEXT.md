@@ -272,6 +272,23 @@ const events = await nostr.query(
 );
 ```
 
+#### Use in URL Paths
+
+For URL routing, use NIP-19 identifiers as path parameters (e.g., `/:nip19`) to create secure, universal links to Nostr events. Decode the identifier and render the appropriate component based on the type:
+
+- Regular events: Use `/nevent1...` paths
+- Replaceable/addressable events: Use `/naddr1...` paths
+
+Always use `naddr` identifiers for addressable events instead of just the `d` tag value, as `naddr` contains the author pubkey needed to create secure filters. This prevents security issues where malicious actors could publish events with the same `d` tag to override content.
+
+```ts
+// Secure routing with naddr
+const decoded = nip19.decode(params.nip19);
+if (decoded.type === 'naddr' && decoded.data.kind === 30024) {
+  // Render ArticlePage component
+}
+```
+
 ### Nostr Edit Profile
 
 To include an Edit Profile form, place the `EditProfileForm` component in the project:
