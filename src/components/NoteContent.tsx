@@ -73,7 +73,7 @@ export function NoteContent({
               </Link>
             );
           }
-        } catch (e) {
+        } catch {
           // If decoding fails, just render as text
           parts.push(fullMatch);
         }
