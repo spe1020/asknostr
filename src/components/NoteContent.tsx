@@ -3,6 +3,7 @@ import { type NostrEvent } from '@nostrify/nostrify';
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { useAuthor } from '@/hooks/useAuthor';
+import { genUserName } from '@/lib/genUserName';
 import { cn } from '@/lib/utils';
 
 interface NoteContentProps {
@@ -118,7 +119,7 @@ function NostrMention({ pubkey }: { pubkey: string }) {
   const author = useAuthor(pubkey);
   const npub = nip19.npubEncode(pubkey);
   const hasRealName = !!author.data?.metadata?.name;
-  const displayName = author.data?.metadata?.name ?? generateDeterministicName(pubkey);
+  const displayName = author.data?.metadata?.name ?? genUserName(pubkey);
 
   return (
     <Link 
@@ -133,34 +134,4 @@ function NostrMention({ pubkey }: { pubkey: string }) {
       @{displayName}
     </Link>
   );
-}
-
-// Generate a deterministic name based on pubkey
-function generateDeterministicName(pubkey: string): string {
-  // Use a simple hash of the pubkey to generate consistent adjective + noun combinations
-  const adjectives = [
-    'Swift', 'Bright', 'Calm', 'Bold', 'Wise', 'Kind', 'Quick', 'Brave',
-    'Cool', 'Sharp', 'Clear', 'Strong', 'Smart', 'Fast', 'Keen', 'Pure',
-    'Noble', 'Gentle', 'Fierce', 'Steady', 'Clever', 'Proud', 'Silent', 'Wild'
-  ];
-  
-  const nouns = [
-    'Fox', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Tiger', 'Hawk', 'Owl',
-    'Deer', 'Raven', 'Falcon', 'Lynx', 'Otter', 'Whale', 'Shark', 'Dolphin',
-    'Phoenix', 'Dragon', 'Panther', 'Jaguar', 'Cheetah', 'Leopard', 'Puma', 'Cobra'
-  ];
-
-  // Create a simple hash from the pubkey
-  let hash = 0;
-  for (let i = 0; i < pubkey.length; i++) {
-    const char = pubkey.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  
-  // Use absolute value to ensure positive index
-  const adjIndex = Math.abs(hash) % adjectives.length;
-  const nounIndex = Math.abs(hash >> 8) % nouns.length;
-  
-  return `${adjectives[adjIndex]}${nouns[nounIndex]}`;
 }

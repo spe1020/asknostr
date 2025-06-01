@@ -122,14 +122,15 @@ The data may be transformed into a more appropriate format if needed, and multip
 To display profile data for a user by their Nostr pubkey (such as an event author), use the `useAuthor` hook.
 
 ```tsx
-import { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
+import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
+import { genUserName } from '@/lib/genUserName';
 
 function Post({ event }: { event: NostrEvent }) {
   const author = useAuthor(event.pubkey);
   const metadata: NostrMetadata | undefined = author.data?.metadata;
 
-  const displayName = metadata?.name || event.pubkey.slice(0, 8);
+  const displayName = metadata?.name ?? genUserName(event.pubkey);
   const profileImage = metadata?.picture;
 
   // ...render elements with this data
