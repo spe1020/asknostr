@@ -10,7 +10,8 @@ interface NoteContentProps {
   className?: string;
 }
 
-export function NoteContent({ 
+/** Parses content of text note events so that URLs and hashtags are linkified. */
+export function NoteContent({
   event, 
   className, 
 }: NoteContentProps) {
@@ -18,8 +19,6 @@ export function NoteContent({
   
   // Process the content to render mentions, links, etc.
   useEffect(() => {
-    if (!event || event.kind !== 1) return;
-    
     const processContent = async () => {
       const text = event.content;
       

@@ -338,9 +338,9 @@ const encrypted = await user.signer.nip44.encrypt(user.pubkey, "hello world");
 const decrypted = await user.signer.nip44.decrypt(user.pubkey, encrypted) // "hello world"
 ```
 
-### Rendering Kind 1 Text
+### Rendering Rich Text Content
 
-If you need to render kind 1 text, use the `NoteContent` component:
+Nostr text notes (kind 1, 11, and 1111) have a plaintext `content` field that may contain URLs, hashtags, and Nostr URIs. These events should render their content using the `NoteContent` component:
 
 ```tsx
 import { NoteContent } from "@/components/NoteContent";
@@ -367,19 +367,53 @@ export function Post(/* ...props */) {
 - Component-based architecture with React hooks
 - Default connection to multiple Nostr relays for network redundancy
 
-## Build & Deployment
+## Writing Tests
 
-- Build for production: `npm run build`
-- Development build: `npm run build:dev`
+This project uses Vitest for testing React components. The `TestApp` component provides all necessary providers for components that use Nostr functionality, React Router, and TanStack Query.
+
+Test files should be placed next to the module they test, using a `.test.tsx` or `.test.ts` extension:
+- `src/components/MyComponent.tsx` → `src/components/MyComponent.test.tsx`
+- `src/hooks/useCustomHook.ts` → `src/hooks/useCustomHook.test.ts`
+
+### Test Setup
+
+Wrap components with the `TestApp` component to provide required context providers:
+
+```tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { TestApp } from '@/test/TestApp';
+import { MyComponent } from './MyComponent';
+
+describe('MyComponent', () => {
+  it('renders correctly', () => {
+    render(
+      <TestApp>
+        <MyComponent />
+      </TestApp>
+    );
+
+    expect(screen.getByText('Expected text')).toBeInTheDocument();
+  });
+});
+```
+
+### Mocking Hooks
+
+Mock custom hooks using Vitest's `vi.mock()`:
+
+```tsx
+import { vi } from 'vitest';
+
+vi.mock('@/hooks/useCurrentUser', () => ({
+  useCurrentUser: () => ({
+    user: null, // or provide mock user data
+  }),
+}));
+```
 
 ## Testing Your Changes
 
-Whenever you modify code, you should test your changes after you're finished by running:
+Whenever you modify code, you must run the **test** script using the **run_script** tool.
 
-```bash
-npm run test
-```
-
-This command will typecheck the code and attempt to build it.
-
-Your task is not considered finished until this test passes without errors.
+**Your task is not considered finished until this test passes without errors.**
