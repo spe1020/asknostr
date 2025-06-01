@@ -20,7 +20,7 @@ export function NoteContent({
     const text = event.content;
     
     // Regex to find URLs, Nostr references, and hashtags
-    const regex = /(https?:\/\/[^\s]+)|nostr:(npub1|note1|nprofile1|nevent1)([a-z0-9]+)|(#\w+)/g;
+    const regex = /(https?:\/\/[^\s]+)|nostr:(npub1|note1|nprofile1|nevent1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)/g;
     
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
@@ -117,14 +117,50 @@ export function NoteContent({
 function NostrMention({ pubkey }: { pubkey: string }) {
   const author = useAuthor(pubkey);
   const npub = nip19.npubEncode(pubkey);
-  const displayName = author.data?.metadata?.name ?? npub.slice(0, 8);
+  const hasRealName = !!author.data?.metadata?.name;
+  const displayName = author.data?.metadata?.name ?? generateDeterministicName(pubkey);
 
   return (
     <Link 
       to={`/${npub}`}
-      className="font-medium text-blue-500 hover:underline"
+      className={cn(
+        "font-medium hover:underline",
+        hasRealName 
+          ? "text-blue-500" 
+          : "text-gray-500 hover:text-gray-700"
+      )}
     >
       @{displayName}
     </Link>
   );
+}
+
+// Generate a deterministic name based on pubkey
+function generateDeterministicName(pubkey: string): string {
+  // Use a simple hash of the pubkey to generate consistent adjective + noun combinations
+  const adjectives = [
+    'Swift', 'Bright', 'Calm', 'Bold', 'Wise', 'Kind', 'Quick', 'Brave',
+    'Cool', 'Sharp', 'Clear', 'Strong', 'Smart', 'Fast', 'Keen', 'Pure',
+    'Noble', 'Gentle', 'Fierce', 'Steady', 'Clever', 'Proud', 'Silent', 'Wild'
+  ];
+  
+  const nouns = [
+    'Fox', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Tiger', 'Hawk', 'Owl',
+    'Deer', 'Raven', 'Falcon', 'Lynx', 'Otter', 'Whale', 'Shark', 'Dolphin',
+    'Phoenix', 'Dragon', 'Panther', 'Jaguar', 'Cheetah', 'Leopard', 'Puma', 'Cobra'
+  ];
+
+  // Create a simple hash from the pubkey
+  let hash = 0;
+  for (let i = 0; i < pubkey.length; i++) {
+    const char = pubkey.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  // Use absolute value to ensure positive index
+  const adjIndex = Math.abs(hash) % adjectives.length;
+  const nounIndex = Math.abs(hash >> 8) % nouns.length;
+  
+  return `${adjectives[adjIndex]}${nouns[nounIndex]}`;
 }
