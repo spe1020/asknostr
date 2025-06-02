@@ -64,7 +64,6 @@ The project uses shadcn/ui components located in `@/components/ui`. These are un
 - **Skeleton**: Loading placeholder
 - **Slider**: Input for selecting a value from a range
 - **Sonner**: Toast notification manager
-- **Spinner**: Animated loading spinner
 - **Switch**: Toggle switch control
 - **Table**: Data table with headers and rows
 - **Tabs**: Tabbed interface component
@@ -386,7 +385,73 @@ export function Post(/* ...props */) {
 - Implements Path Aliases with `@/` prefix for cleaner imports
 - Uses Vite for fast development and production builds
 - Component-based architecture with React hooks
-- Default connection to multiple Nostr relays for network redundancy
+- Default connection to one Nostr relay for best performance
+
+## Design Customization
+
+**Always tailor the site's look and feel based on the user's specific request.** This includes:
+
+- **Color schemes**: Use exact colors if specified by the user, otherwise choose an appropriate scheme that matches the application's purpose and aesthetic
+- **Dark mode**: The project includes a ThemeProvider that defaults to light mode. If the application will likely need dark mode (e.g., developer tools, content platforms, social apps), implement dark mode support as components are created and switch the ThemeProvider to use system theme by default
+- **Typography**: Choose fonts that match the requested aesthetic (modern, elegant, playful, etc.)
+- **Layout**: Follow the requested structure (3-column, sidebar, grid, etc.)
+- **Component styling**: Use appropriate border radius, shadows, and spacing for the desired feel
+- **Interactive elements**: Style buttons, forms, and hover states to match the theme
+
+### Adding Fonts
+
+To add custom fonts, follow these steps:
+
+1. **Install a font package** using the npm_add_package tool:
+   
+   **Any Google Font can be installed** using the @fontsource packages. Examples:
+   - For Inter Variable: `npm_add_package({ name: "@fontsource-variable/inter" })`
+   - For Roboto: `npm_add_package({ name: "@fontsource/roboto" })`
+   - For Outfit Variable: `npm_add_package({ name: "@fontsource-variable/outfit" })`
+   - For Poppins: `npm_add_package({ name: "@fontsource/poppins" })`
+   - For Open Sans: `npm_add_package({ name: "@fontsource/open-sans" })`
+   
+   **Format**: `@fontsource/[font-name]` or `@fontsource-variable/[font-name]` (for variable fonts)
+
+2. **Import the font** in `src/main.tsx`:
+   ```typescript
+   import '@fontsource-variable/inter';
+   ```
+
+3. **Update Tailwind configuration** in `tailwind.config.ts`:
+   ```typescript
+   export default {
+     theme: {
+       extend: {
+         fontFamily: {
+           sans: ['Inter Variable', 'Inter', 'system-ui', 'sans-serif'],
+         },
+       },
+     },
+   }
+   ```
+
+### Recommended Font Choices by Use Case
+
+- **Modern/Clean**: Inter Variable, Outfit Variable, or Manrope
+- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro  
+- **Creative/Artistic**: Poppins, Nunito, or Comfortaa
+- **Technical/Code**: JetBrains Mono, Fira Code, or Source Code Pro (for monospace)
+
+### Color Scheme Implementation
+
+When users specify color schemes:
+- Update CSS custom properties in `src/index.css`
+- Use Tailwind's color palette or define custom colors
+- Ensure proper contrast ratios for accessibility
+- Apply colors consistently across components (buttons, links, accents)
+
+### Component Styling Patterns
+
+- Use `cn()` utility for conditional class merging
+- Follow shadcn/ui patterns for component variants
+- Implement responsive design with Tailwind breakpoints
+- Add hover and focus states for interactive elements
 
 ## Writing Tests
 
