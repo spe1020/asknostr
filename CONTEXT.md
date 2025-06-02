@@ -390,11 +390,7 @@ export function Post(/* ...props */) {
 
 ## Writing Tests
 
-This project uses Vitest for testing React components. The `TestApp` component provides all necessary providers for components that use Nostr functionality, React Router, and TanStack Query.
-
-Test files should be placed next to the module they test, using a `.test.tsx` or `.test.ts` extension:
-- `src/components/MyComponent.tsx` → `src/components/MyComponent.test.tsx`
-- `src/hooks/useCustomHook.ts` → `src/hooks/useCustomHook.test.ts`
+**Important for AI Assistants**: Only create tests when the user is experiencing a specific problem or explicitly requests tests. Do not proactively write tests for new features or components unless the user is having issues that require testing to diagnose or resolve.
 
 ### Test Setup
 
@@ -417,20 +413,6 @@ describe('MyComponent', () => {
     expect(screen.getByText('Expected text')).toBeInTheDocument();
   });
 });
-```
-
-### Mocking Hooks
-
-Mock custom hooks using Vitest's `vi.mock()`:
-
-```tsx
-import { vi } from 'vitest';
-
-vi.mock('@/hooks/useCurrentUser', () => ({
-  useCurrentUser: () => ({
-    user: null, // or provide mock user data
-  }),
-}));
 ```
 
 ## Testing Your Changes
