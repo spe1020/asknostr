@@ -16,6 +16,10 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    linterOptions: {
+      noInlineConfig: true, // Prevents all eslint-disable comments
+      reportUnusedDisableDirectives: "error", // Reports unused disable directives as errors
+    },
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
