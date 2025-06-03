@@ -14,10 +14,10 @@ interface RelayInfo {
 
 // Available relay options
 export const RELAY_OPTIONS: RelayInfo[] = [
-  { url: 'wss://ditto.pub/relay', name: 'Ditto' },
   { url: 'wss://relay.damus.io', name: 'Damus' },
-  { url: 'wss://nos.lol', name: 'nos.lol' },
-  { url: 'wss://relay.nostr.band', name: 'nostr.band' },
+  { url: 'wss://ditto.pub/relay', name: 'Ditto' },
+  { url: 'wss://relay.nostr.band', name: 'Nostr.Band' },
+  { url: 'wss://relay.primal.net', name: 'Primal' },
 ];
 
 // Default application configuration
