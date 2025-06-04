@@ -14,21 +14,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useAppConfig } from "@/hooks/useAppConfig";
 import { useState } from "react";
 
 interface RelaySelectorProps {
   className?: string;
-  availableRelays?: { name: string; url: string }[];
+  selectedRelay?: string;
+  setSelectedRelay: (relay: string) => void;
+  presetRelays?: { name: string; url: string }[];
 }
 
-export function RelaySelector({ className, availableRelays = [] }: RelaySelectorProps) {
-  const { config, updateConfig } = useAppConfig();
+export function RelaySelector(props: RelaySelectorProps) {
+  const { selectedRelay, setSelectedRelay, className, presetRelays = [] } = props;
 
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
-  const selectedOption = availableRelays.find((option) => option.url === config.relayUrl);
+  const selectedOption = presetRelays.find((option) => option.url === selectedRelay);
 
   // Function to normalize relay URL by adding wss:// if no protocol is present
   const normalizeRelayUrl = (url: string): string => {
@@ -46,12 +47,9 @@ export function RelaySelector({ className, availableRelays = [] }: RelaySelector
 
   // Handle adding a custom relay
   const handleAddCustomRelay = (url: string) => {
-    const normalizedUrl = normalizeRelayUrl(url);
-    if (normalizedUrl) {
-      updateConfig(config => ({ ...config, relayUrl: normalizedUrl }));
-      setOpen(false);
-      setInputValue("");
-    }
+    setSelectedRelay?.(normalizeRelayUrl(url));
+    setOpen(false);
+    setInputValue("");
   };
 
   // Check if input value looks like a valid relay URL
@@ -83,8 +81,8 @@ export function RelaySelector({ className, availableRelays = [] }: RelaySelector
             <span className="truncate">
               {selectedOption 
                 ? selectedOption.name 
-                : config.relayUrl 
-                  ? config.relayUrl.replace(/^wss?:\/\//, '')
+                : selectedRelay 
+                  ? selectedRelay.replace(/^wss?:\/\//, '')
                   : "Select relay..."
               }
             </span>
@@ -121,7 +119,7 @@ export function RelaySelector({ className, availableRelays = [] }: RelaySelector
               )}
             </CommandEmpty>
             <CommandGroup>
-              {availableRelays
+              {presetRelays
                 .filter((option) => 
                   !inputValue || 
                   option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
@@ -132,7 +130,7 @@ export function RelaySelector({ className, availableRelays = [] }: RelaySelector
                     key={option.url}
                     value={option.url}
                     onSelect={(currentValue) => {
-                      updateConfig(config => ({ ...config, relayUrl: currentValue }));
+                      setSelectedRelay(normalizeRelayUrl(currentValue));
                       setOpen(false);
                       setInputValue("");
                     }}
@@ -140,7 +138,7 @@ export function RelaySelector({ className, availableRelays = [] }: RelaySelector
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        config.relayUrl === option.url ? "opacity-100" : "opacity-0"
+                        selectedRelay === option.url ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">

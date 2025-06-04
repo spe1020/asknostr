@@ -8,13 +8,16 @@ interface AppProviderProps {
   storageKey: string;
   /** Default app configuration */
   defaultConfig: AppConfig;
+  /** Optional list of preset relays to display in the RelaySelector */
+  presetRelays?: { name: string; url: string }[];
 }
 
 export function AppProvider(props: AppProviderProps) {
   const {
     children,
     storageKey,
-    defaultConfig
+    defaultConfig,
+    presetRelays,
   } = props;
 
   // App configuration state with localStorage persistence
@@ -28,6 +31,7 @@ export function AppProvider(props: AppProviderProps) {
   const appContextValue: AppContextType = {
     config,
     updateConfig,
+    presetRelays,
   };
 
   // Apply theme effects to document
