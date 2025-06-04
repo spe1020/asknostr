@@ -433,6 +433,31 @@ The router includes automatic scroll-to-top functionality and a 404 NotFound pag
 - Default connection to one Nostr relay for best performance
 - Comprehensive provider setup with NostrLoginProvider, QueryClientProvider, and custom AppProvider
 
+## Loading States
+
+**Use skeleton loading** for structured content (feeds, profiles, forms). **Use spinners** only for buttons or short operations.
+
+```tsx
+// Skeleton example matching component structure
+<Card>
+  <CardHeader>
+    <div className="flex items-center space-x-3">
+      <Skeleton className="h-10 w-10 rounded-full" />
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-3 w-16" />
+      </div>
+    </div>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-4/5" />
+    </div>
+  </CardContent>
+</Card>
+```
+
 ## Design Customization
 
 **Tailor the site's look and feel based on the user's specific request.** This includes:
