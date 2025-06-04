@@ -97,6 +97,20 @@ These components follow a consistent pattern using React's `forwardRef` and use 
 
 This project comes with custom hooks for querying and publishing events on the Nostr network.
 
+### Custom NIP Definition
+
+The file `NIP.md` is used by this project to define a custom Nostr protocol document. If the file doesn't exist, it means this project doesn't have any custom Nostr events associated with it yet. Typically NIPs define custom event kinds.
+
+Before deciding upon a kind number for a custom event, use `nostr__read_nips_index` to see what kinds are currently in use across all NIPs. The kind number determines the event's behavior and storage characteristics:
+
+- **Regular Events** (1 ≤ kind < 10000): Expected to be stored by relays permanently. Used for persistent content like notes, articles, etc.
+- **Replaceable Events** (10000 ≤ kind < 20000): Only the latest event per pubkey+kind combination is stored. Used for profile metadata, contact lists, etc.
+- **Addressable Events** (30000 ≤ kind < 40000): Identified by pubkey+kind+d-tag combination, only latest per combination is stored. Used for articles, long-form content, etc.
+
+For more detailed information about event structure and behavior, read the `event` protocol page using `nostr__read_protocol`.
+
+**Important**: Whenever new Nostr event kinds are created, if they are not already defined by an existing NIP, the `NIP.md` file in the project must be created or updated to document the custom event structure. Whenever the structure of one of these custom events changes, `NIP.md` must be updated accordingly.
+
 ### The `useNostr` Hook
 
 The `useNostr` hook returns an object containing a `nostr` property, with `.query()` and `.event()` methods for querying and publishing Nostr events respectively.
