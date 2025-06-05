@@ -149,6 +149,57 @@ function usePosts() {
 
 The data may be transformed into a more appropriate format if needed, and multiple calls to `nostr.query()` may be made in a single queryFn.
 
+#### Event Validation
+
+When querying events, if the event kind being returned has required tags or required JSON fields in the content, the events should be filtered through a validator function. This is not generally needed for kinds such as 1, where all tags are optional and the content is freeform text, but is especially useful for custom kinds as well as kinds with strict requirements.
+
+```typescript
+// Example validator function for NIP-52 calendar events
+function validateCalendarEvent(event: NostrEvent): boolean {
+  // Check if it's a calendar event kind
+  if (![31922, 31923].includes(event.kind)) return false;
+
+  // Check for required tags according to NIP-52
+  const d = event.tags.find(([name]) => name === 'd')?.[1];
+  const title = event.tags.find(([name]) => name === 'title')?.[1];
+  const start = event.tags.find(([name]) => name === 'start')?.[1];
+
+  // All calendar events require 'd', 'title', and 'start' tags
+  if (!d || !title || !start) return false;
+
+  // Additional validation for date-based events (kind 31922)
+  if (event.kind === 31922) {
+    // start tag should be in YYYY-MM-DD format for date-based events
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(start)) return false;
+  }
+
+  // Additional validation for time-based events (kind 31923)
+  if (event.kind === 31923) {
+    // start tag should be a unix timestamp for time-based events
+    const timestamp = parseInt(start);
+    if (isNaN(timestamp) || timestamp <= 0) return false;
+  }
+
+  return true;
+}
+
+function useCalendarEvents() {
+  const { nostr } = useNostr();
+
+  return useQuery({
+    queryKey: ['calendar-events'],
+    queryFn: async (c) => {
+      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
+      const events = await nostr.query([{ kinds: [31922, 31923], limit: 20 }], { signal });
+      
+      // Filter events through validator to ensure they meet NIP-52 requirements
+      return events.filter(validateCalendarEvent);
+    },
+  });
+}
+```
+
 ### The `useAuthor` Hook
 
 To display profile data for a user by their Nostr pubkey (such as an event author), use the `useAuthor` hook.
