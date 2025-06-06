@@ -573,7 +573,7 @@ To add custom fonts, follow these steps:
 
 2. **Import the font** in `src/main.tsx`:
    ```typescript
-   import '@fontsource-variable/inter';
+   import '@fontsource-variable/<font-name>';
    ```
 
 3. **Update Tailwind configuration** in `tailwind.config.ts`:
