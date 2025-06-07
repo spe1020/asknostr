@@ -97,19 +97,29 @@ These components follow a consistent pattern using React's `forwardRef` and use 
 
 This project comes with custom hooks for querying and publishing events on the Nostr network.
 
-### Custom NIP Definition
+### Nostr Implementation Guidelines
 
-The file `NIP.md` is used by this project to define a custom Nostr protocol document. If the file doesn't exist, it means this project doesn't have any custom Nostr events associated with it yet. Typically NIPs define custom event kinds.
+- Before implementing features on Nostr, use the `read_nips_index` tool to see what kinds are currently in use across all NIPs.
+- If any existing kind or NIP might offer the required functionality, use the `read_nip` tool to investigate. Several NIPs may need to be read before making a decision.
+- If there are no existing suitable kinds, new kind numbers can be generated with the `generate_kind` tool.
 
-Before deciding upon a kind number for a custom event, use `nostr__read_nips_index` to see what kinds are currently in use across all NIPs. The kind number determines the event's behavior and storage characteristics:
+Knowing when to create a new kind versus reusing an existing kind requires careful judgement. Introducing new kinds means the project won't be interoperable with existing clients. But deviating too far from the schema of a particular kind can cause different interoperability issues.
 
-- **Regular Events** (1 ≤ kind < 10000): Expected to be stored by relays permanently. Used for persistent content like notes, articles, etc.
+### Kind Ranges
+
+An event's kind number determines the event's behavior and storage characteristics:
+
+- **Regular Events** (1000 ≤ kind < 10000): Expected to be stored by relays permanently. Used for persistent content like notes, articles, etc.
 - **Replaceable Events** (10000 ≤ kind < 20000): Only the latest event per pubkey+kind combination is stored. Used for profile metadata, contact lists, etc.
 - **Addressable Events** (30000 ≤ kind < 40000): Identified by pubkey+kind+d-tag combination, only latest per combination is stored. Used for articles, long-form content, etc.
 
-For more detailed information about event structure and behavior, read the `event` protocol page using `nostr__read_protocol`.
+Kinds below 1000 are considered "legacy" kinds, and may have different storage characteristics based on their kind definition. For example, kind 1 is regular, while kind 3 is replaceable.
 
-**Important**: Whenever new Nostr event kinds are created, if they are not already defined by an existing NIP, the `NIP.md` file in the project must be created or updated to document the custom event structure. Whenever the structure of one of these custom events changes, `NIP.md` must be updated accordingly.
+### NIP.md
+
+The file `NIP.md` is used by this project to define a custom Nostr protocol document. If the file doesn't exist, it means this project doesn't have any custom kinds associated with it.
+
+Whenever new kinds are generated, the `NIP.md` file in the project must be created or updated to document the custom event schema. Whenever the schema of one of these custom events changes, `NIP.md` must also be updated accordingly.
 
 ### The `useNostr` Hook
 
