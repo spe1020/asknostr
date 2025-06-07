@@ -1,6 +1,13 @@
+import { useSeoMeta } from '@unhead/react';
+
 // FIXME: Update this page (the content is just a fallback if you fail to update the page)
 
 const Index = () => {
+  useSeoMeta({
+    title: 'Welcome to Your Blank App',
+    description: 'A modern Nostr client application built with React, TailwindCSS, and Nostrify.',
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="text-center">
