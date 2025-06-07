@@ -105,6 +105,37 @@ This project comes with custom hooks for querying and publishing events on the N
 
 Knowing when to create a new kind versus reusing an existing kind requires careful judgement. Introducing new kinds means the project won't be interoperable with existing clients. But deviating too far from the schema of a particular kind can cause different interoperability issues.
 
+#### Choosing Between Existing NIPs and Custom Kinds
+
+When implementing features that could use existing NIPs, follow this decision framework:
+
+1. **Prioritize Existing NIPs**: Always prefer extending or using existing NIPs over creating custom kinds, even if they require minor compromises in functionality.
+
+2. **Interoperability vs. Perfect Fit**: Consider the trade-off between:
+   - **Interoperability**: Using existing kinds means compatibility with other Nostr clients
+   - **Perfect Schema**: Custom kinds allow perfect data modeling but create ecosystem fragmentation
+
+3. **Extension Strategy**: When existing NIPs are close but not perfect:
+   - Use the existing kind as the base
+   - Add domain-specific tags for additional metadata
+   - Document the extensions in `NIP.md`
+
+4. **When to Create Custom Kinds**:
+   - No existing NIP covers the core functionality
+   - The data structure is fundamentally different from existing patterns
+   - The use case requires different storage characteristics (regular vs replaceable vs addressable)
+
+**Example Decision Process**:
+```
+Need: Equipment marketplace for farmers
+Options:
+1. NIP-15 (Marketplace) - Too structured for peer-to-peer sales
+2. NIP-99 (Classified Listings) - Good fit, can extend with farming tags
+3. Custom kind - Perfect fit but no interoperability
+
+Decision: Use NIP-99 + farming-specific tags for best balance
+```
+
 ### Kind Ranges
 
 An event's kind number determines the event's behavior and storage characteristics:
