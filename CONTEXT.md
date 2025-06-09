@@ -589,6 +589,7 @@ The router includes automatic scroll-to-top functionality and a 404 NotFound pag
 - Component-based architecture with React hooks
 - Default connection to one Nostr relay for best performance
 - Comprehensive provider setup with NostrLoginProvider, QueryClientProvider, and custom AppProvider
+- **Never use the `any` type**: Always use proper TypeScript types for type safety
 
 ## Loading States
 
