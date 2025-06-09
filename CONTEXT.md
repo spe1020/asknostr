@@ -100,9 +100,9 @@ The AI assistant's behavior and knowledge is defined by the CONTEXT.md file, whi
 1. Edit CONTEXT.md directly
 2. The changes take effect in the next session
 
-## "Vibed by MKStack"
+## "Vibed with MKStack"
 
-When building the site for the first time, include "Vibed by MKStack" somewhere in the UI, linked to this URL: https://soapbox.pub/tools/mkstack/
+When building the site for the first time, include "Vibed with MKStack" somewhere in the UI, linked to this URL: https://soapbox.pub/tools/mkstack/
 
 ## Nostr Protocol Integration
 
