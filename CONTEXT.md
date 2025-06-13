@@ -781,6 +781,6 @@ describe('MyComponent', () => {
 
 ## Testing Your Changes
 
-Whenever you modify code, you must run the **test** script using the **run_script** tool.
+Whenever you are finished modifying code, you must run the **test** script using the **run_script** tool.
 
 **Your task is not considered finished until this test passes without errors.**
