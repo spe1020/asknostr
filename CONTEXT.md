@@ -120,18 +120,20 @@ Knowing when to create a new kind versus reusing an existing kind requires caref
 
 When implementing features that could use existing NIPs, follow this decision framework:
 
-1. **Prioritize Existing NIPs**: Always prefer extending or using existing NIPs over creating custom kinds, even if they require minor compromises in functionality.
+1. **Thorough NIP Review**: Before considering a new kind, always perform a comprehensive review of existing NIPs and their associated kinds. Use the `read_nips_index` tool to get an overview, and then `read_nip` and `read_kind` to investigate any potentially relevant NIPs or kinds in detail. The goal is to find the closest existing solution.
 
-2. **Interoperability vs. Perfect Fit**: Consider the trade-off between:
+2. **Prioritize Existing NIPs**: Always prefer extending or using existing NIPs over creating custom kinds, even if they require minor compromises in functionality.
+
+3. **Interoperability vs. Perfect Fit**: Consider the trade-off between:
    - **Interoperability**: Using existing kinds means compatibility with other Nostr clients
    - **Perfect Schema**: Custom kinds allow perfect data modeling but create ecosystem fragmentation
 
-3. **Extension Strategy**: When existing NIPs are close but not perfect:
+4. **Extension Strategy**: When existing NIPs are close but not perfect:
    - Use the existing kind as the base
    - Add domain-specific tags for additional metadata
    - Document the extensions in `NIP.md`
 
-4. **When to Create Custom Kinds**:
+5. **When to Generate Custom Kinds**:
    - No existing NIP covers the core functionality
    - The data structure is fundamentally different from existing patterns
    - The use case requires different storage characteristics (regular vs replaceable vs addressable)
