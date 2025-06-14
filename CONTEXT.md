@@ -189,6 +189,31 @@ When designing tags for Nostr events, follow these principles:
    const events = await nostr.query([{ kinds: [30402], '#t': ['electronics'] }]);
    ```
 
+#### `t` Tag Filtering for Community-Specific Content
+
+For applications focused on a specific community or niche, you can use `t` tags to filter events for the target audience.
+
+**When to Use:**
+- ✅ Community apps: "farmers" → `t: "farming"`, "Poland" → `t: "poland"`
+- ❌ Generic platforms: Twitter clones, general Nostr clients
+
+**Implementation:**
+```typescript
+// Publishing with community tag
+createEvent({ 
+  kind: 1, 
+  content: data.content,
+  tags: [['t', 'farming']]
+});
+
+// Querying community content
+const events = await nostr.query([{ 
+  kinds: [1], 
+  '#t': ['farming'],
+  limit: 20 
+}], { signal });
+```
+
 ### Kind Ranges
 
 An event's kind number determines the event's behavior and storage characteristics:
