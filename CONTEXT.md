@@ -110,11 +110,15 @@ This project comes with custom hooks for querying and publishing events on the N
 
 ### Nostr Implementation Guidelines
 
-- Before implementing features on Nostr, use the `nostr__read_nips_index` tool to see what kinds are currently in use across all NIPs.
-- If any existing kind or NIP might offer the required functionality, use the `nostr__read_nip` tool to investigate. Several NIPs may need to be read before making a decision.
-- If there are no existing suitable kinds, new kind numbers can be generated with the `nostr__generate_kind` tool.
+**⚠️ Important: These guidelines must be followed for all Nostr-related implementations to ensure proper interoperability.**
+
+- **Always** use the `nostr__read_nips_index` tool before implementing any Nostr features to see what kinds are currently in use across all NIPs.
+- If any existing kind or NIP might offer the required functionality, use the `nostr__read_nip` tool to investigate thoroughly. Several NIPs may need to be read before making a decision.
+- Only generate new kind numbers with the `nostr__generate_kind` tool if no existing suitable kinds are found after comprehensive research.
 
 Knowing when to create a new kind versus reusing an existing kind requires careful judgement. Introducing new kinds means the project won't be interoperable with existing clients. But deviating too far from the schema of a particular kind can cause different interoperability issues.
+
+**The decision between existing NIPs and custom kinds is a critical architectural choice that directly impacts interoperability and adoption.**
 
 #### Choosing Between Existing NIPs and Custom Kinds
 
