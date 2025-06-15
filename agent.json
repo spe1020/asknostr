@@ -4,7 +4,7 @@
     "js-dev": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@soapbox.pub/js-dev-mcp"]
+      "args": ["-y", "@soapbox.pub/js-dev-mcp@latest"]
     },
     "nostr": {
       "type": "stdio",
