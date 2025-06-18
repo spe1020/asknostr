@@ -297,6 +297,44 @@ function usePosts() {
 }
 ```
 
+#### Efficient Query Design
+
+**Critical**: Always minimize the number of separate queries to avoid rate limiting and improve performance. Combine related queries whenever possible.
+
+**✅ Efficient - Single query with multiple kinds:**
+```typescript
+// Query multiple event types in one request
+const events = await nostr.query([
+  {
+    kinds: [1, 6, 16], // All repost kinds in one query
+    '#e': [eventId],
+    limit: 150,
+  }
+], { signal });
+
+// Separate by type in JavaScript
+const notes = events.filter((e) => e.kind === 1);
+const reposts = events.filter((e) => e.kind === 6);
+const genericReposts = events.filter((e) => e.kind === 16);
+```
+
+**❌ Inefficient - Multiple separate queries:**
+```typescript
+// This creates unnecessary load and can trigger rate limiting
+const [notes, reposts, genericReposts] = await Promise.all([
+  nostr.query([{ kinds: [1], '#e': [eventId] }], { signal }),
+  nostr.query([{ kinds: [6], '#e': [eventId] }], { signal }),
+  nostr.query([{ kinds: [16], '#e': [eventId] }], { signal }),
+]);
+```
+
+**Query Optimization Guidelines:**
+1. **Combine kinds**: Use `kinds: [1, 6, 16]` instead of separate queries
+2. **Use multiple filters**: When you need different tag filters, use multiple filter objects in a single query
+3. **Adjust limits**: When combining queries, increase the limit appropriately
+4. **Filter in JavaScript**: Separate event types after receiving results rather than making multiple requests
+5. **Consider relay capacity**: Each query consumes relay resources and may count against rate limits
+
 The data may be transformed into a more appropriate format if needed, and multiple calls to `nostr.query()` may be made in a single queryFn.
 
 #### Event Validation
