@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react';
+import { z } from 'zod';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { AppContext, type AppConfig, type AppContextType, type Theme } from '@/contexts/AppContext';
 
@@ -12,6 +13,12 @@ interface AppProviderProps {
   presetRelays?: { name: string; url: string }[];
 }
 
+// Zod schema for AppConfig validation
+const AppConfigSchema: z.ZodType<AppConfig> = z.object({
+  theme: z.enum(['dark', 'light', 'system']),
+  relayUrl: z.string().url(),
+});
+
 export function AppProvider(props: AppProviderProps) {
   const {
     children,
@@ -21,7 +28,17 @@ export function AppProvider(props: AppProviderProps) {
   } = props;
 
   // App configuration state with localStorage persistence
-  const [config, setConfig] = useLocalStorage<AppConfig>(storageKey, defaultConfig);
+  const [config, setConfig] = useLocalStorage<AppConfig>(
+    storageKey,
+    defaultConfig,
+    {
+      serialize: JSON.stringify,
+      deserialize: (value: string) => {
+        const parsed = JSON.parse(value);
+        return AppConfigSchema.parse(parsed);
+      }
+    }
+  );
 
   // Generic config updater with callback pattern
   const updateConfig = (updater: (currentConfig: AppConfig) => AppConfig) => {
