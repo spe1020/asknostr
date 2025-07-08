@@ -1,7 +1,7 @@
 // NOTE: This file is stable and usually should not be modified.
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Shield, Upload, AlertTriangle, Sparkles, UserPlus, KeyRound, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,22 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
   }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const login = useLoginActions();
+
+  // Reset all state when dialog opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state when dialog opens
+      setIsLoading(false);
+      setIsFileLoading(false);
+      setNsec('');
+      setBunkerUri('');
+      setErrors({});
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [isOpen]);
 
   const handleExtensionLogin = async () => {
     setIsLoading(true);
