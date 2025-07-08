@@ -2,7 +2,7 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useRef, useState } from 'react';
-import { Shield, Upload, AlertTriangle, Sparkles, Crown, Gem, Star, KeyRound, Lock } from 'lucide-react';
+import { Shield, Upload, AlertTriangle, Sparkles, UserPlus, KeyRound, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -165,52 +165,38 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl")}
       >
         <DialogHeader className={cn('px-6 pt-6 pb-1 relative')}>
             <DialogTitle className={cn('font-semibold text-center')}>
-              Welcome, Traveler!
+              Welcome!
             </DialogTitle>
             <DialogDescription className="text-center">
-              Start your quest, or login to return to your adventure
+              Sign up or log in to continue
             </DialogDescription>
         </DialogHeader>
         <div className='px-6 pt-2 pb-4 space-y-4 overflow-y-auto flex-1'>
           {/* Prominent Sign Up Section */}
-          <div className='relative p-4 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-950/50 adventure:from-amber-50 adventure:to-orange-100 adventure:dark:from-amber-950/50 adventure:dark:to-orange-950/50 border border-green-200 dark:border-green-800 adventure:border-amber-200 adventure:dark:border-amber-800 overflow-hidden'>
-            {/* Magical sparkles */}
-            <div className='absolute inset-0 pointer-events-none'>
-              <Sparkles className='absolute top-2 right-3 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
-              <Star className='absolute top-4 left-4 w-2 h-2 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
-              <Gem className='absolute bottom-3 right-4 w-2 h-2 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
-            </div>
-
+          <div className='relative p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800 overflow-hidden'>
             <div className='relative z-10 text-center space-y-3'>
               <div className='flex justify-center items-center gap-2 mb-2'>
-                <Crown className='w-5 h-5 text-green-600 adventure:text-amber-700' />
-                <span className='font-semibold text-green-800 dark:text-green-200 adventure:text-amber-800 adventure:dark:text-amber-200'>
-                  <span className='adventure:hidden'>New to Geocaching?</span>
-                  <span className='hidden adventure:inline'>New to the Quest?</span>
+                <UserPlus className='w-5 h-5 text-blue-600' />
+                <span className='font-semibold text-blue-800 dark:text-blue-200'>
+                  New to Nostr?
                 </span>
               </div>
 
-              <p className='text-sm text-green-700 dark:text-green-300 adventure:text-amber-700 adventure:dark:text-amber-300 mb-3'>
-                <span className='adventure:hidden'>
-                  Join the guild of adventurers discovering hidden geocaches worldwide!
-                </span>
-                <span className='hidden adventure:inline'>
-                  Join the ancient guild of geocache seekers on legendary quests!
-                </span>
+              <p className='text-sm text-blue-700 dark:text-blue-300 mb-3'>
+                Create a new account to join the network.
               </p>
 
               <Button
                 onClick={handleSignupClick}
-                className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 adventure:from-amber-700 adventure:to-orange-700 adventure:hover:from-amber-800 adventure:hover:to-orange-800 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
+                className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
               >
                 <Sparkles className='w-4 h-4 mr-2' />
-                <span className='adventure:hidden'>Start Your Adventure!</span>
-                <span className='hidden adventure:inline'>Begin Your Quest!</span>
+                <span>Create Account</span>
               </Button>
             </div>
           </div>
@@ -222,7 +208,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
             </div>
             <div className='relative flex justify-center text-sm'>
               <span className='px-3 bg-background text-muted-foreground'>
-                <span>Or return to your adventure</span>
+                <span>Or log in</span>
               </span>
             </div>
           </div>

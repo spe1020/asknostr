@@ -2,7 +2,7 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Key, Compass, Scroll, Shield, Crown, Sparkles, MapPin, Gem, Map, Star, Zap, Lock, CheckCircle, Copy, Upload } from 'lucide-react';
+import { Download, Key, UserPlus, FileText, Shield, User, Sparkles, LogIn, Lock, CheckCircle, Copy, Upload, Globe, FileSignature, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,7 +46,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
     setIsLoading(true);
     setShowSparkles(true);
 
-    // Add a dramatic pause for the treasure generation effect
+    // Add a dramatic pause for the key generation effect
     setTimeout(() => {
       try {
         // Generate a new secret key
@@ -57,8 +57,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
         setStep('download');
 
         toast({
-          title: 'Your Treasure Key is Ready!',
-          description: 'A magical key has been forged just for you.',
+          title: 'Your Secret Key is Ready!',
+          description: 'A new secret key has been generated for you.',
         });
       } catch {
         toast({
@@ -80,7 +80,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
       const url = globalThis.URL.createObjectURL(blob);
 
       // Sanitize filename
-      const filename = sanitizeFilename('treasure-key.txt');
+      const filename = sanitizeFilename('secret-key.txt');
 
       // Create a temporary link element and trigger download
       const a = document.createElement('a');
@@ -98,8 +98,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
       setKeySecured('downloaded');
 
       toast({
-        title: 'Treasure Key Secured!',
-        description: 'Your key has been safely stored in your vault. Guard it well!',
+        title: 'Secret Key Saved!',
+        description: 'Your key has been safely stored. Keep it safe!',
       });
     } catch {
       toast({
@@ -114,8 +114,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
     navigator.clipboard.writeText(nsec);
     setKeySecured('copied');
     toast({
-      title: 'Copied to your spellbook!',
-      description: 'Key safely transcribed to clipboard',
+      title: 'Copied to clipboard!',
+      description: 'Key copied to clipboard.',
     });
   };
 
@@ -181,7 +181,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
   const finishSignup = async (skipProfile = false) => {
     // Mark signup completion time for fallback welcome modal
-    localStorage.setItem('treasures_last_signup', Date.now().toString());
+    localStorage.setItem('signup_completed', Date.now().toString());
 
     try {
       // Publish profile if user provided information
@@ -198,7 +198,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
         toast({
           title: 'Profile Created!',
-          description: 'Your adventurer profile has been set up.',
+          description: 'Your profile has been set up.',
         });
       }
 
@@ -215,8 +215,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
         setTimeout(() => {
           onClose();
           toast({
-            title: 'Welcome to the Adventure!',
-            description: 'Your quest begins now!',
+            title: 'Welcome!',
+            description: 'Your account is ready.',
           });
         }, 3000);
       }
@@ -240,8 +240,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
         setTimeout(() => {
           onClose();
           toast({
-            title: 'Welcome to the Adventure!',
-            description: 'Your quest begins now!',
+            title: 'Welcome!',
+            description: 'Your account is ready.',
           });
         }, 3000);
       }
@@ -251,42 +251,42 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
   const getTitle = () => {
     if (step === 'welcome') return (
       <span className="flex items-center justify-center gap-2">
-        <Map className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        Begin Your Quest
+        <UserPlus className="w-5 h-5 text-primary" />
+        Create Your Account
       </span>
     );
     if (step === 'generate') return (
       <span className="flex items-center justify-center gap-2">
-        <Sparkles className="w-5 h-5 text-purple-600 adventure:text-amber-700" />
-        Forging Your Key
+        <Wand2 className="w-5 h-5 text-primary" />
+        Generating Your Key
       </span>
     );
     if (step === 'download') return (
       <span className="flex items-center justify-center gap-2">
-        <Lock className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        Secure Your Treasure Key
+        <Lock className="w-5 h-5 text-primary" />
+        Secure Your Secret Key
       </span>
     );
     if (step === 'profile') return (
       <span className="flex items-center justify-center gap-2">
-        <Crown className="w-5 h-5 text-green-600 adventure:text-amber-700" />
+        <FileSignature className="w-5 h-5 text-primary" />
         Create Your Profile
       </span>
     );
     return (
       <span className="flex items-center justify-center gap-2">
-        <Crown className="w-5 h-5 text-green-600 adventure:text-amber-700" />
-        Welcome, Adventurer!
+        <User className="w-5 h-5 text-primary" />
+        Welcome!
       </span>
     );
   };
 
   const getDescription = () => {
-    if (step === 'welcome') return 'Ready to discover hidden geocaches around the world?';
-    if (step === 'generate') return 'Creating your magical key to unlock Treasures';
-    if (step === 'download') return 'This key is your passport to adventure - keep it safe!';
-    if (step === 'profile') return 'Tell other adventurers about yourself';
-    return 'Your adventure begins now!';
+    if (step === 'welcome') return 'Ready to join the Nostr network?';
+    if (step === 'generate') return 'Creating your secret key to access Nostr.';
+    if (step === 'download') return 'This key is your password - keep it safe!';
+    if (step === 'profile') return 'Tell others about yourself.';
+    return 'Your account is ready!';
   };
 
   // Reset state when dialog opens
@@ -329,48 +329,48 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
           {step === 'welcome' && (
             <div className='text-center space-y-4'>
               {/* Hero illustration */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-950/50 adventure:from-amber-50 adventure:to-orange-100 adventure:dark:from-amber-950/50 adventure:dark:to-orange-950/50'>
+              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50'>
                 <div className='flex justify-center items-center space-x-4 mb-3'>
                   <div className='relative'>
-                    <MapPin className='w-12 h-12 text-green-600 adventure:text-amber-700 animate-bounce' />
+                    <UserPlus className='w-12 h-12 text-blue-600' />
                     <Sparkles className='w-4 h-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse' />
                   </div>
-                  <Compass className='w-16 h-16 text-green-700 adventure:text-amber-800 animate-spin-slow' />
+                  <Globe className='w-16 h-16 text-blue-700 animate-spin-slow' />
                   <div className='relative'>
-                    <Gem className='w-12 h-12 text-green-600 adventure:text-amber-700 animate-bounce' style={{animationDelay: '0.5s'}} />
-                    <Star className='w-4 h-4 text-yellow-500 absolute -top-1 -left-1 animate-pulse' style={{animationDelay: '0.3s'}} />
+                    <FileText className='w-12 h-12 text-blue-600' />
+                    <Sparkles className='w-4 h-4 text-yellow-500 absolute -top-1 -left-1 animate-pulse' style={{animationDelay: '0.3s'}} />
                   </div>
                 </div>
 
-                {/* Adventure benefits */}
+                {/* Benefits */}
                 <div className='grid grid-cols-1 gap-2 text-sm'>
-                  <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
+                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
                     <Shield className='w-4 h-4' />
-                    Embark on legendary quests worldwide
+                    Decentralized and censorship-resistant
                   </div>
-                  <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
-                    <Crown className='w-4 h-4' />
-                    Hide your own geocaches
+                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
+                    <User className='w-4 h-4' />
+                    You are in control of your data
                   </div>
-                  <div className='flex items-center justify-center gap-2 text-green-700 dark:text-green-300 adventure:text-amber-800 adventure:dark:text-amber-200'>
-                    <Map className='w-4 h-4' />
-                    Unite with fellow adventurers
+                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
+                    <Globe className='w-4 h-4' />
+                    Join a global network
                   </div>
                 </div>
               </div>
 
               <div className='space-y-3'>
                 <p className='text-muted-foreground px-5'>
-                  Join adventurers exploring the world through geocaching.
-                  Your quest begins with forging your very own treasure key.
+                  Join the Nostr network and take control of your social media experience.
+                  Your journey begins by generating a secret key.
                 </p>
 
                 <Button
-                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 adventure:from-amber-700 adventure:to-orange-700 adventure:hover:from-amber-800 adventure:hover:to-orange-800 transform transition-all duration-200 hover:scale-105 shadow-lg'
+                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg'
                   onClick={() => setStep('generate')}
                 >
-                  <Zap className='w-5 h-5 mr-2' />
-                  Begin My Quest!
+                  <LogIn className='w-5 h-5 mr-2' />
+                  Get Started
                 </Button>
 
                 <p className='text-xs text-muted-foreground'>
@@ -383,7 +383,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
           {/* Generate Step - Enhanced with animations */}
           {step === 'generate' && (
             <div className='text-center space-y-4'>
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-100 dark:from-blue-950/50 dark:to-purple-950/50 adventure:from-amber-50 adventure:to-yellow-100 adventure:dark:from-amber-950/50 adventure:dark:to-yellow-950/50 overflow-hidden'>
+              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-100 dark:from-blue-950/50 dark:to-purple-950/50 overflow-hidden'>
                 {/* Animated background elements */}
                 {showSparkles && (
                   <div className='absolute inset-0'>
@@ -413,10 +413,10 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                       <div className='space-y-2'>
                         <p className='text-lg font-semibold text-primary flex items-center justify-center gap-2'>
                           <Sparkles className='w-5 h-5' />
-                          Forging your magical key...
+                          Generating your secret key...
                         </p>
                         <p className='text-sm text-muted-foreground'>
-                          Weaving cryptographic spells
+                          Creating your secure key
                         </p>
                       </div>
                     </div>
@@ -425,13 +425,13 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                       <Key className='w-20 h-20 text-primary mx-auto' />
                       <div className='space-y-2'>
                         <p className='text-lg font-semibold'>
-                          Ready to forge your treasure key?
+                          Ready to generate your secret key?
                         </p>
                         <p className='text-sm text-muted-foreground px-5'>
-                          This magical key will be your passport to the world of Treasures.
+                          This key will be your password to access applications within the Nostr network.
                         </p>
                         <p className='text-sm text-muted-foreground px-5'>
-                          It's completely unique and secure - keep it secret, keep it safe!
+                          It's completely unique and secure:<br></br>keep it secret, keep it safe!
                         </p>
                       </div>
                     </div>
@@ -441,12 +441,12 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
               {!isLoading && (
                 <Button
-                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 adventure:from-amber-700 adventure:to-yellow-700 adventure:hover:from-amber-800 adventure:hover:to-yellow-800 transform transition-all duration-200 hover:scale-105 shadow-lg'
+                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transform transition-all duration-200 hover:scale-105 shadow-lg'
                   onClick={generateKey}
                   disabled={isLoading}
                 >
                   <Sparkles className='w-5 h-5 mr-2' />
-                  Forge My Treasure Key!
+                  Generate My Secret Key
                 </Button>
               )}
             </div>
@@ -455,22 +455,22 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
           {/* Download Step - Whimsical and magical */}
           {step === 'download' && (
             <div className='text-center space-y-4'>
-              {/* Magical treasure chest reveal */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-950/50 adventure:from-amber-50 adventure:to-orange-100 adventure:dark:from-amber-950/50 adventure:dark:to-orange-950/50 overflow-hidden'>
-                {/* Magical sparkles floating around */}
+              {/* Key reveal */}
+              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 overflow-hidden'>
+                {/* Sparkles */}
                 <div className='absolute inset-0 pointer-events-none'>
                   <Sparkles className='absolute top-3 left-4 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
-                  <Star className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
+                  <Sparkles className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
                   <Sparkles className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
-                  <Star className='absolute bottom-3 right-4 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '1.5s'}} />
+                  <Sparkles className='absolute bottom-3 right-4 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '1.5s'}} />
                 </div>
 
                 <div className='relative z-10 flex justify-center items-center mb-3'>
                   <div className='relative'>
-                    <div className='w-16 h-16 bg-gradient-to-br from-yellow-200 to-amber-300 adventure:from-amber-200 adventure:to-orange-300 rounded-full flex items-center justify-center shadow-lg animate-pulse'>
-                      <Key className='w-8 h-8 text-amber-800 adventure:text-orange-900' />
+                    <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full flex items-center justify-center shadow-lg animate-pulse'>
+                      <Key className='w-8 h-8 text-indigo-800' />
                     </div>
-                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-green-500 adventure:bg-emerald-600 rounded-full flex items-center justify-center animate-bounce'>
+                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center animate-bounce'>
                       <Sparkles className='w-3 h-3 text-white' />
                     </div>
                   </div>
@@ -478,40 +478,40 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
                 <div className='relative z-10 space-y-2'>
                   <p className='text-base font-semibold'>
-                    Behold! Your magical treasure key!
+                    Your secret key has been generated!
                   </p>
 
-                  {/* Whimsical warning with scroll design */}
+                  {/* Warning */}
                   <div className='relative mx-auto max-w-sm'>
-                    <div className='p-3 bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/40 adventure:from-orange-100 adventure:via-amber-50 adventure:to-orange-100 adventure:dark:from-orange-950/40 adventure:dark:via-amber-950/20 adventure:dark:to-orange-950/40 rounded-lg border-2 border-amber-300 dark:border-amber-700 adventure:border-orange-400 adventure:dark:border-orange-600 shadow-md'>
+                    <div className='p-3 bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/40 rounded-lg border-2 border-amber-300 dark:border-amber-700 shadow-md'>
                       <div className='flex items-center gap-2 mb-1'>
-                        <Scroll className='w-3 h-3 text-amber-700 adventure:text-orange-800' />
-                        <span className='text-xs font-bold text-amber-800 dark:text-amber-200 adventure:text-orange-900 adventure:dark:text-orange-200'>
-                          Ancient Warning
+                        <FileText className='w-3 h-3 text-amber-700' />
+                        <span className='text-xs font-bold text-amber-800 dark:text-amber-200'>
+                          Important Warning
                         </span>
                       </div>
-                      <p className='text-xs text-amber-700 dark:text-amber-300 adventure:text-orange-800 adventure:dark:text-orange-300 italic'>
-"Guard this key with your life, for once lost to the digital winds, it shall never return..."
+                      <p className='text-xs text-red-700 dark:text-amber-300 italic'>
+                        This key is your primary and only means of accessing your account. Store it safely and securely.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Enchanted key vault */}
-              <div className='relative p-3 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 adventure:from-amber-100 adventure:to-yellow-200 adventure:dark:from-amber-900 adventure:to-yellow-900 rounded-xl border-2 border-dashed border-amber-400 dark:border-amber-600 adventure:border-orange-500 adventure:dark:border-orange-400 shadow-inner'>
+              {/* Key vault */}
+              <div className='relative p-3 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl border-2 border-dashed border-blue-400 dark:border-blue-600 shadow-inner'>
                 <div className='flex items-center gap-2 mb-2'>
-                  <Lock className='w-4 h-4 text-amber-600 adventure:text-orange-700' />
-                  <span className='text-sm font-medium text-amber-800 dark:text-amber-200 adventure:text-orange-800 adventure:dark:text-orange-200'>
-                    Your Treasure Key
+                  <Lock className='w-4 h-4 text-blue-600' />
+                  <span className='text-sm font-medium text-blue-800 dark:text-blue-200'>
+                    Your Secret Key
                   </span>
                 </div>
-                <div className='p-2 bg-background/90 rounded-lg border border-amber-300 dark:border-amber-700 adventure:border-orange-400 adventure:dark:border-orange-600'>
-                  <code className='text-xs break-all font-mono text-amber-900 dark:text-amber-100 adventure:text-orange-900 adventure:dark:text-orange-100'>{nsec}</code>
+                <div className='p-2 bg-background/90 rounded-lg border border-blue-300 dark:border-blue-700'>
+                  <code className='text-xs break-all font-mono text-blue-900 dark:text-blue-100'>{nsec}</code>
                 </div>
               </div>
 
-              {/* Security options - clearly presented as choices */}
+              {/* Security options */}
               <div className='space-y-3'>
                 <div className='text-center'>
                   <p className='text-sm font-medium text-muted-foreground mb-2'>
@@ -523,7 +523,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   {/* Copy Option */}
                   <Card className={`cursor-pointer transition-all duration-200 ${
                     keySecured === 'copied'
-                      ? 'ring-2 ring-green-500 adventure:ring-amber-500 bg-green-50 dark:bg-green-950/20 adventure:bg-amber-50 adventure:dark:bg-amber-950/20'
+                      ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
                       : 'hover:bg-muted/50 dark:bg-muted'
                   }`}>
                     <CardContent className='p-3'>
@@ -535,11 +535,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                         <div className='flex items-center gap-3 w-full'>
                           <div className={`p-1.5 rounded-lg ${
                             keySecured === 'copied'
-                              ? 'bg-green-100 dark:bg-green-900 adventure:bg-amber-100 adventure:dark:bg-amber-900'
+                              ? 'bg-green-100 dark:bg-green-900'
                               : 'bg-muted'
                           }`}>
                             {keySecured === 'copied' ? (
-                              <CheckCircle className='w-4 h-4 text-green-600 adventure:text-amber-600' />
+                              <CheckCircle className='w-4 h-4 text-green-600' />
                             ) : (
                               <Copy className='w-4 h-4 text-muted-foreground' />
                             )}
@@ -553,7 +553,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                             </div>
                           </div>
                           {keySecured === 'copied' && (
-                            <div className='text-xs font-medium text-green-600 adventure:text-amber-600'>
+                            <div className='text-xs font-medium text-green-600'>
                               ✓ Copied
                             </div>
                           )}
@@ -565,7 +565,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   {/* Download Option */}
                   <Card className={`cursor-pointer transition-all duration-200 ${
                     keySecured === 'downloaded'
-                      ? 'ring-2 ring-green-500 adventure:ring-amber-500 bg-green-50 dark:bg-green-950/20 adventure:bg-amber-50 adventure:dark:bg-amber-950/20'
+                      ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
                       : 'hover:bg-muted/50 dark:bg-muted'
                   }`}>
                     <CardContent className='p-3'>
@@ -577,11 +577,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                         <div className='flex items-center gap-3 w-full'>
                           <div className={`p-1.5 rounded-lg ${
                             keySecured === 'downloaded'
-                              ? 'bg-green-100 dark:bg-green-900 adventure:bg-amber-100 adventure:dark:bg-amber-900'
+                              ? 'bg-green-100 dark:bg-green-900'
                               : 'bg-muted'
                           }`}>
                             {keySecured === 'downloaded' ? (
-                              <CheckCircle className='w-4 h-4 text-green-600 adventure:text-amber-600' />
+                              <CheckCircle className='w-4 h-4 text-green-600' />
                             ) : (
                               <Download className='w-4 h-4 text-muted-foreground' />
                             )}
@@ -591,11 +591,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                               Download as File
                             </div>
                             <div className='text-xs text-muted-foreground'>
-                              Save as treasure-key.txt file
+                              Save as secret-key.txt file
                             </div>
                           </div>
                           {keySecured === 'downloaded' && (
-                            <div className='text-xs font-medium text-green-600 adventure:text-amber-600'>
+                            <div className='text-xs font-medium text-green-600'>
                               ✓ Downloaded
                             </div>
                           )}
@@ -605,17 +605,17 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   </Card>
                 </div>
 
-                {/* Continue button - blocked until key is secured */}
+                {/* Continue button */}
                 <Button
                   className={`w-full rounded-full py-4 text-base font-semibold transform transition-all duration-200 shadow-lg ${
                     keySecured !== 'none'
-                      ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 adventure:from-amber-700 adventure:to-orange-700 adventure:hover:from-amber-800 adventure:hover:to-orange-800 hover:scale-105'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:scale-105'
                       : 'bg-muted text-muted-foreground cursor-not-allowed'
                   }`}
                   onClick={finishKeySetup}
                   disabled={keySecured === 'none'}
                 >
-                  <Compass className='w-4 h-4 mr-2 flex-shrink-0' />
+                  <LogIn className='w-4 h-4 mr-2 flex-shrink-0' />
                   <span className="text-center leading-tight">
                     {keySecured === 'none' ? (
                       <>
@@ -623,8 +623,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                       </>
                     ) : (
                       <>
-                        <span className="hidden sm:inline">My Key is Safe - Let the Quest Begin!</span>
-                        <span className="sm:hidden">Key Secured - Begin Quest!</span>
+                        <span className="hidden sm:inline">My Key is Safe - Continue</span>
+                        <span className="sm:hidden">Key Secured - Continue</span>
                       </>
                     )}
                   </span>
@@ -637,20 +637,20 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
           {step === 'profile' && (
             <div className='text-center space-y-4'>
               {/* Profile setup illustration */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 adventure:from-amber-50 adventure:to-yellow-100 adventure:dark:from-amber-950/50 adventure:dark:to-yellow-950/50 overflow-hidden'>
-                {/* Magical sparkles */}
+              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 overflow-hidden'>
+                {/* Sparkles */}
                 <div className='absolute inset-0 pointer-events-none'>
                   <Sparkles className='absolute top-3 left-4 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
-                  <Star className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
-                  <Crown className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
+                  <Sparkles className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
+                  <Sparkles className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
                 </div>
 
                 <div className='relative z-10 flex justify-center items-center mb-3'>
                   <div className='relative'>
-                    <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 adventure:from-amber-200 adventure:to-yellow-300 rounded-full flex items-center justify-center shadow-lg'>
-                      <Crown className='w-8 h-8 text-blue-800 adventure:text-amber-800' />
+                    <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full flex items-center justify-center shadow-lg'>
+                      <User className='w-8 h-8 text-blue-800' />
                     </div>
-                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 adventure:bg-amber-500 rounded-full flex items-center justify-center animate-bounce'>
+                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center animate-bounce'>
                       <Sparkles className='w-3 h-3 text-white' />
                     </div>
                   </div>
@@ -662,18 +662,18 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                   </p>
 
                   <p className='text-sm text-muted-foreground'>
-                    Your legend starts here
+                    Your profile is your identity on Nostr.
                   </p>
                 </div>
               </div>
 
               {/* Publishing status indicator */}
               {isPublishing && (
-                <div className='relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 adventure:from-amber-50 adventure:to-yellow-50 adventure:dark:from-amber-950/30 adventure:dark:to-yellow-950/30 border border-blue-200 dark:border-blue-800 adventure:border-amber-200 adventure:dark:border-amber-800'>
+                <div className='relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800'>
                   <div className='flex items-center justify-center gap-3'>
-                    <div className='w-5 h-5 border-2 border-blue-600 adventure:border-amber-600 border-t-transparent rounded-full animate-spin' />
-                    <span className='text-sm font-medium text-blue-700 dark:text-blue-300 adventure:text-amber-700 adventure:dark:text-amber-300'>
-                      Publishing your profile to the realm...
+                    <div className='w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin' />
+                    <span className='text-sm font-medium text-blue-700 dark:text-blue-300'>
+                      Publishing your profile...
                     </span>
                   </div>
                 </div>
@@ -752,7 +752,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
               {/* Action buttons */}
               <div className='space-y-3'>
                 <Button
-                  className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 adventure:from-amber-700 adventure:to-yellow-700 adventure:hover:from-amber-800 adventure:hover:to-yellow-800 transform transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+                  className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
                   onClick={() => finishSignup(false)}
                   disabled={isPublishing || isUploading}
                 >
@@ -763,8 +763,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                     </>
                   ) : (
                     <>
-                      <Crown className='w-4 h-4 mr-2' />
-                      Create Profile & Begin Quest!
+                      <User className='w-4 h-4 mr-2' />
+                      Create Profile & Finish
                     </>
                   )}
                 </Button>
@@ -781,7 +781,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                       Setting up account...
                     </>
                   ) : (
-                    'Skip for now - Begin Quest!'
+                    'Skip for now'
                   )}
                 </Button>
               </div>
