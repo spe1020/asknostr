@@ -6,7 +6,7 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
 import { nip57, nip19, Event } from 'nostr-tools';
 import type { WebLNProvider } from 'webln';
-import type { ZapTarget } from '@/components/ZapButton';
+import type { ZapTarget } from '@/components/ZapDialog';
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent, NostrFilter } from '@nostrify/nostrify';
@@ -28,7 +28,7 @@ export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuc
     queryFn: async (c) => {
       if (!target.id && !target.naddr) return [];
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
-      
+
       const filters: NostrFilter[] = [];
 
       if (target.naddr) {

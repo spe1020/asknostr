@@ -1,10 +1,5 @@
-import { useToast } from '@/hooks/useToast';
-import { useZaps } from '@/hooks/useZaps';
-import type { WebLNProvider } from 'webln';
-import type { ZapTarget } from '@/components/ZapButton';
-import QRCode from 'qrcode';
+import { useState, useEffect, useRef } from 'react';
 import { Zap, Copy } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,23 +8,42 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuthor } from '@/hooks/useAuthor';
+import { useToast } from '@/hooks/useToast';
+import { useZaps } from '@/hooks/useZaps';
+import { requestProvider } from 'webln';
+import type { WebLNProvider } from 'webln';
+import QRCode from 'qrcode';
 
-interface ZapModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface ZapTarget {
+  pubkey: string;
+  id: string;
+  relays?: string[];
+  dTag?: string;
+  naddr?: string;
+}
+
+interface ZapDialogProps {
   target: ZapTarget;
-  webln: WebLNProvider | null;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 const presetAmounts = [1, 50, 100, 250, 1000];
 
-export function ZapModal({ open, onOpenChange, target, webln }: ZapModalProps) {
+export function ZapDialog({ target, children, className }: ZapDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [webln, setWebln] = useState<WebLNProvider | null>(null);
+  const { user } = useCurrentUser();
+  const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
-  const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, () => onOpenChange(false));
+  const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, () => setOpen(false));
   const [amount, setAmount] = useState<number | string>(100);
   const [comment, setComment] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,9 +82,31 @@ export function ZapModal({ open, onOpenChange, target, webln }: ZapModalProps) {
     zap(finalAmount, comment);
   };
 
+  const handleTriggerClick = async () => {
+    if (!webln) {
+      try {
+        const provider = await requestProvider();
+        setWebln(provider);
+      } catch (err) {
+        // Silently fail
+        console.error(err);
+      }
+    }
+  };
+
+  if (!user || user.pubkey === target.pubkey || !author?.metadata?.lud16) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} data-testid="zap-modal">
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" onClick={handleTriggerClick} className={className}>
+          <Zap className={`h-4 w-4 ${children ? 'mr-2' : ''}`} />
+          {children}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]" data-testid="zap-modal">
         <DialogHeader>
           <DialogTitle>{invoice ? 'Manual Zap' : 'Send a Zap'}</DialogTitle>
           <DialogDescription asChild>
