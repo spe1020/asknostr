@@ -6,7 +6,6 @@ import { requestProvider } from 'webln';
 import type { WebLNProvider } from 'webln';
 import { ZapModal } from './ZapModal';
 import { useAuthor } from '@/hooks/useAuthor';
-import { useNostrLogin } from '@nostrify/react';
 
 export interface ZapTarget {
   pubkey: string;
@@ -25,7 +24,7 @@ interface ZapButtonProps {
 export function ZapButton({ target, children, className }: ZapButtonProps) {
   const [webln, setWebln] = useState<WebLNProvider | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useNostrLogin();
+  const { user } = useCurrentUser();
   const { data: author } = useAuthor(target.pubkey);
 
   const handleOpenModal = async () => {
