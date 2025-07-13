@@ -24,7 +24,6 @@ function parseNWCUri(uri: string): NWCConnection | null {
     const walletPubkey = url.pathname.replace('//', '');
     const secret = url.searchParams.get('secret');
     const relayParam = url.searchParams.getAll('relay');
-    const _lud16 = url.searchParams.get('lud16') || undefined;
 
     if (!walletPubkey || !secret || relayParam.length === 0) {
       return null;
@@ -194,7 +193,7 @@ export function useZaps(
     }
 
     try {
-      if (!author.data || !author.data?.metadata) {
+      if (!author.data || !author.data?.metadata || !author.data?.event ) {
         toast({
           title: 'Author not found',
           description: 'Could not find the author of this item.',
@@ -204,8 +203,8 @@ export function useZaps(
         return;
       }
 
-      const { lud16 } = author.data.metadata;
-      if (!lud16) {
+      const { lud06, lud16 } = author.data.metadata;
+      if (!lud06 && !lud16) {
         toast({
           title: 'Lightning address not found',
           description: 'The author does not have a lightning address configured.',
@@ -216,7 +215,7 @@ export function useZaps(
       }
 
       // Get zap endpoint using the old reliable method
-      const zapEndpoint = await nip57.getZapEndpoint(author.data.event as Event);
+      const zapEndpoint = await nip57.getZapEndpoint(author.data.event);
       if (!zapEndpoint) {
         toast({
           title: 'Zap endpoint not found',
@@ -227,30 +226,20 @@ export function useZaps(
         return;
       }
 
+      // Create zap request
       const zapAmount = amount * 1000; // convert to millisats
-      const relays = [config.relayUrl];
-
-      // Create zap request (unsigned, like the old implementation)
       const zapRequest = nip57.makeZapRequest({
         profile: primaryTarget.pubkey,
-        event: primaryTarget.id,
+        event: primaryTarget,
         amount: zapAmount,
-        relays,
-        comment: comment,
+        relays: [config.relayUrl],
+        comment
       });
-
-      // Handle addressable events
-      if (primaryTarget.kind >= 30000 && primaryTarget.kind < 40000) {
-        const identifier = primaryTarget.tags.find((t) => t[0] === 'd')?.[1] || '';
-        zapRequest.tags.push(["a", `${primaryTarget.kind}:${primaryTarget.pubkey}:${identifier}`]);
-        zapRequest.tags = zapRequest.tags.filter(t => t[0] !== 'e');
-      }
 
       // Sign and publish the zap request
       publishEvent(zapRequest, {
         onSuccess: async (event) => {
           try {
-            // Use the old fetch method - more reliable than LNURL validation
             const res = await fetch(`${zapEndpoint}?amount=${zapAmount}&nostr=${encodeURI(JSON.stringify(event))}`);
             const responseData = await res.json();
 
@@ -266,38 +255,10 @@ export function useZaps(
             // Get the current active NWC connection dynamically
             const currentNWCConnection = getActiveConnection();
 
-            console.debug('Zap payment - detailed state check:', {
-              // Raw state
-              connectionsLength: connections.length,
-              activeConnectionString: activeConnection ? activeConnection.substring(0, 50) + '...' : null,
-
-              // Connection details
-              connections: connections.map(c => ({
-                alias: c.alias,
-                isConnected: c.isConnected,
-                connectionString: c.connectionString.substring(0, 50) + '...'
-              })),
-
-              // getActiveConnection result
-              currentNWCConnection: currentNWCConnection ? {
-                alias: currentNWCConnection.alias,
-                isConnected: currentNWCConnection.isConnected,
-                connectionString: currentNWCConnection.connectionString.substring(0, 50) + '...'
-              } : null
-            });
-
             // Try NWC first if available and properly connected
             if (currentNWCConnection && currentNWCConnection.connectionString && currentNWCConnection.isConnected) {
               try {
-                console.debug('Attempting NWC payment...', {
-                  amount,
-                  alias: currentNWCConnection.alias,
-                  invoiceLength: newInvoice.length
-                });
-
-                const response = await sendPayment(currentNWCConnection, newInvoice);
-
-                console.debug('NWC payment successful:', { preimage: response.preimage });
+                await sendPayment(currentNWCConnection, newInvoice);
 
                 // Clear states immediately on success
                 setIsZapping(false);
@@ -322,10 +283,7 @@ export function useZaps(
                   variant: 'destructive',
                 });
               }
-            }
-
-            // Fallback to WebLN or manual payment
-            if (webln) {
+            } else if (webln) {  // Try WebLN next
               await webln.sendPayment(newInvoice);
 
               // Clear states immediately on success
@@ -339,7 +297,7 @@ export function useZaps(
 
               // Close dialog last to ensure clean state
               onZapSuccess?.();
-            } else {
+            } else { // Default - show QR code and manual Lightning URI
               setInvoice(newInvoice);
               setIsZapping(false);
             }
@@ -376,7 +334,6 @@ export function useZaps(
   };
 
   return {
-    // Legacy single-target API (for backward compatibility)
     zaps,
     ...query,
     zap,
@@ -384,8 +341,6 @@ export function useZaps(
     invoice,
     setInvoice,
     parseNWCUri,
-
-    // New batch API
     zapData,
     isBatchMode,
 

@@ -10,7 +10,6 @@ interface ZapButtonProps {
   target: Event;
   className?: string;
   showCount?: boolean;
-  // New: option to pass pre-fetched zap data (for batch mode)
   zapData?: { count: number; totalSats: number; isLoading?: boolean };
 }
 

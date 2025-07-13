@@ -44,7 +44,7 @@ export function useWallet() {
     }
   }, [webln, isDetecting]);
 
-  // Only auto-detect once on mount, don't spam detection
+  // Only auto-detect once on mount
   useEffect(() => {
     if (!hasAttemptedDetection) {
       detectWebLN();

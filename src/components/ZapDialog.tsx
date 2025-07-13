@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Zap, Copy, Sparkle, Sparkles, Star, Rocket, Wallet, Globe } from 'lucide-react';
+import { Zap, Copy, Sparkle, Sparkles, Star, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,24 +40,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const { user } = useCurrentUser();
   const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
-  const { webln, activeNWC, hasWebLN, hasNWC, detectWebLN } = useWallet();
-
-  // Debug logging
-  useEffect(() => {
-    console.debug('ZapDialog wallet status:', { hasWebLN, hasNWC, activeNWC: !!activeNWC });
-  }, [hasWebLN, hasNWC, activeNWC]);
-
-  // Additional debug logging when dialog opens
-  useEffect(() => {
-    if (open) {
-      console.debug('ZapDialog opened with wallet status:', {
-        hasWebLN,
-        hasNWC,
-        activeNWC: activeNWC ? { alias: activeNWC.alias, isConnected: activeNWC.isConnected } : null
-      });
-    }
-  }, [open, hasWebLN, hasNWC, activeNWC]);
-
+  const { webln, activeNWC, hasWebLN, detectWebLN } = useWallet();
   const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, activeNWC, () => setOpen(false));
   const [amount, setAmount] = useState<number | string>(100);
   const [comment, setComment] = useState<string>('');
@@ -104,7 +87,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     zap(finalAmount, comment);
   };
 
-  if (!user || user.pubkey === target.pubkey || !author?.metadata?.lud16) {
+  if (!user || user.pubkey === target.pubkey || !author?.metadata?.lud06 && !author?.metadata?.lud16) {
     return null;
   }
 
@@ -141,28 +124,6 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           </div>
         ) : (
           <>
-            {/* Payment Method Indicator */}
-            <div className="flex items-center justify-center py-2 px-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {hasNWC ? (
-                  <>
-                    <Wallet className="h-4 w-4 text-green-600" />
-                    <span>Wallet Connected</span>
-                  </>
-                ) : hasWebLN ? (
-                  <>
-                    <Globe className="h-4 w-4 text-blue-600" />
-                    <span>WebLN Available</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    <span>Manual Payment</span>
-                  </>
-                )}
-              </div>
-            </div>
-
             <div className="grid gap-4 py-4">
               <ToggleGroup
                 type="single"
