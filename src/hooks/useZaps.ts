@@ -6,12 +6,12 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
 import { nip57, nip19, Event } from 'nostr-tools';
 import type { WebLNProvider } from 'webln';
-import type { ZapTarget } from '@/components/ZapDialog';
+
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 
-export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuccess?: () => void) {
+export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess?: () => void) {
   const { nostr } = useNostr();
   const { toast } = useToast();
   const { user } = useCurrentUser();
@@ -21,19 +21,28 @@ export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuc
   const [isZapping, setIsZapping] = useState(false);
   const [invoice, setInvoice] = useState<string | null>(null);
 
-  const queryKey = target.naddr ? `naddr:${target.naddr}` : `event:${target.id}`;
+  const naddr =
+    target.kind >= 30000 && target.kind < 40000
+      ? nip19.naddrEncode({
+          identifier: target.tags.find((t) => t[0] === 'd')?.[1] || '',
+          pubkey: target.pubkey,
+          kind: target.kind,
+        })
+      : undefined;
+
+  const queryKey = naddr ? `naddr:${naddr}` : `event:${target.id}`;
 
   const { data: zaps, ...query } = useQuery<NostrEvent[], Error>({
     queryKey: ['zaps', queryKey],
     queryFn: async (c) => {
-      if (!target.id && !target.naddr) return [];
+      if (!target.id && !naddr) return [];
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
 
       const filters: NostrFilter[] = [];
 
-      if (target.naddr) {
+      if (naddr) {
         try {
-          const decoded = nip19.decode(target.naddr);
+          const decoded = nip19.decode(naddr);
           if (decoded.type === 'naddr') {
             const { kind, pubkey, identifier } = decoded.data;
             filters.push({
@@ -42,7 +51,7 @@ export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuc
             });
           }
         } catch (e) {
-          console.error("Invalid naddr", target.naddr, e);
+          console.error("Invalid naddr", naddr, e);
         }
       } else {
         filters.push({
@@ -56,7 +65,7 @@ export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuc
       const events = await nostr.query(filters, { signal });
       return events;
     },
-    enabled: !!target.id || !!target.naddr,
+    enabled: !!target.id || !!naddr,
   });
 
   const zap = async (amount: number, comment: string) => {
@@ -119,9 +128,9 @@ export function useZaps(target: ZapTarget, webln: WebLNProvider | null, onZapSuc
         comment: comment,
       });
 
-      if (target.naddr) {
-        const naddr = nip19.decode(target.naddr).data as nip19.AddressPointer;
-        zapRequest.tags.push(["a", `${naddr.kind}:${naddr.pubkey}:${naddr.identifier}`]);
+      if (naddr) {
+        const decoded = nip19.decode(naddr).data as nip19.AddressPointer;
+        zapRequest.tags.push(["a", `${decoded.kind}:${decoded.pubkey}:${decoded.identifier}`]);
         zapRequest.tags = zapRequest.tags.filter(t => t[0] !== 'e');
       }
 

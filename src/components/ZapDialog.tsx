@@ -17,20 +17,12 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useToast } from '@/hooks/useToast';
 import { useZaps } from '@/hooks/useZaps';
-import { requestProvider } from 'webln';
 import type { WebLNProvider } from 'webln';
 import QRCode from 'qrcode';
-
-export interface ZapTarget {
-  pubkey: string;
-  id: string;
-  relays?: string[];
-  dTag?: string;
-  naddr?: string;
-}
+import type { Event } from 'nostr-tools';
 
 interface ZapDialogProps {
-  target: ZapTarget;
+  target: Event;
   children?: React.ReactNode;
   className?: string;
 }
@@ -39,7 +31,7 @@ const presetAmounts = [1, 50, 100, 250, 1000];
 
 export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const [open, setOpen] = useState(false);
-  const [webln, setWebln] = useState<WebLNProvider | null>(null);
+  const [webln, _setWebln] = useState<WebLNProvider | null>(null);
   const { user } = useCurrentUser();
   const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
@@ -82,18 +74,6 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     zap(finalAmount, comment);
   };
 
-  const handleTriggerClick = async () => {
-    if (!webln) {
-      try {
-        const provider = await requestProvider();
-        setWebln(provider);
-      } catch (err) {
-        // Silently fail
-        console.error(err);
-      }
-    }
-  };
-
   if (!user || user.pubkey === target.pubkey || !author?.metadata?.lud16) {
     return null;
   }
@@ -101,7 +81,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" onClick={handleTriggerClick} className={className}>
+        <Button size="sm" className={className}>
           <Zap className={`h-4 w-4 ${children ? 'mr-2' : ''}`} />
           {children}
         </Button>
