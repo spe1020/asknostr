@@ -51,7 +51,7 @@ The project uses shadcn/ui components located in `@/components/ui`. These are un
 - **Badge**: Small status descriptors for UI elements
 - **Breadcrumb**: Navigation aid showing current location in hierarchy
 - **Button**: Customizable button with multiple variants and sizes
-- **Calendar**: Date picker component 
+- **Calendar**: Date picker component
 - **Card**: Container with header, content, and footer sections
 - **Carousel**: Slideshow for cycling through elements
 - **Chart**: Data visualization component
@@ -174,7 +174,7 @@ When designing tags for Nostr events, follow these principles:
    ```json
    // ❌ Wrong: Multi-letter tag, not queryable at relay level
    ["product_type", "electronics"]
-   
+
    // ✅ Correct: Single-letter tag, relay-indexed and queryable
    ["t", "electronics"]
    ["t", "smartphone"]
@@ -186,7 +186,7 @@ When designing tags for Nostr events, follow these principles:
    // ❌ Inefficient: Get all events, filter in JavaScript
    const events = await nostr.query([{ kinds: [30402] }]);
    const filtered = events.filter(e => hasTag(e, 'product_type', 'electronics'));
-   
+
    // ✅ Efficient: Filter at relay level
    const events = await nostr.query([{ kinds: [30402], '#t': ['electronics'] }]);
    ```
@@ -202,17 +202,17 @@ For applications focused on a specific community or niche, you can use `t` tags 
 **Implementation:**
 ```typescript
 // Publishing with community tag
-createEvent({ 
-  kind: 1, 
+createEvent({
+  kind: 1,
   content: data.content,
   tags: [['t', 'farming']]
 });
 
 // Querying community content
-const events = await nostr.query([{ 
-  kinds: [1], 
+const events = await nostr.query([{
+  kinds: [1],
   '#t': ['farming'],
-  limit: 20 
+  limit: 20
 }], { signal });
 ```
 
@@ -382,7 +382,7 @@ function useCalendarEvents() {
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
       const events = await nostr.query([{ kinds: [31922, 31923], limit: 20 }], { signal });
-      
+
       // Filter events through validator to ensure they meet NIP-52 requirements
       return events.filter(validateCalendarEvent);
     },
@@ -651,6 +651,27 @@ export function Post(/* ...props */) {
 }
 ```
 
+### Lightning Zaps (NIP-57)
+
+Implement zaps with a payment method fallback chain: **NWC → WebLN → Manual**. Always validate recipient lightning addresses (`lud16`/`lud06`) before creating zap requests.
+
+```tsx
+// Use unified wallet detection
+const { webln, activeNWC, preferredMethod } = useWallet();
+const { zap } = useZaps(target, webln, activeNWC, onSuccess);
+
+// Validate recipient can receive zaps
+if (!author.metadata?.lud16 && !author.metadata?.lud06) {
+  return null; // Hide zap button
+}
+```
+
+**Critical patterns:**
+- Detect WebLN only when needed (dialog open)
+- Show payment method indicator to users
+- Handle errors gracefully with specific messaging
+- Use `useZaps` hook for payment logic
+
 ## App Configuration
 
 The project includes an `AppProvider` that manages global application state including theme and relay configuration. The default configuration includes:
@@ -752,14 +773,14 @@ import { Card, CardContent } from '@/components/ui/card';
 To add custom fonts, follow these steps:
 
 1. **Install a font package** using the `js-dev__npm_add_package` tool:
-   
+
    **Any Google Font can be installed** using the @fontsource packages. Examples:
    - For Inter Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/inter" })`
    - For Roboto: `js-dev__npm_add_package({ name: "@fontsource/roboto" })`
    - For Outfit Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/outfit" })`
    - For Poppins: `js-dev__npm_add_package({ name: "@fontsource/poppins" })`
    - For Open Sans: `js-dev__npm_add_package({ name: "@fontsource/open-sans" })`
-   
+
    **Format**: `@fontsource/[font-name]` or `@fontsource-variable/[font-name]` (for variable fonts)
 
 2. **Import the font** in `src/main.tsx`:
@@ -783,7 +804,7 @@ To add custom fonts, follow these steps:
 ### Recommended Font Choices by Use Case
 
 - **Modern/Clean**: Inter Variable, Outfit Variable, or Manrope
-- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro  
+- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro
 - **Creative/Artistic**: Poppins, Nunito, or Comfortaa
 - **Technical/Code**: JetBrains Mono, Fira Code, or Source Code Pro (for monospace)
 
