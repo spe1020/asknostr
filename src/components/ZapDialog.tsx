@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Zap, Copy } from 'lucide-react';
+import { Zap, Copy, Sparkle, Sparkles, Star, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useToast } from '@/hooks/useToast';
 import { useZaps } from '@/hooks/useZaps';
 import type { WebLNProvider } from 'webln';
+import { requestProvider } from 'webln';
 import QRCode from 'qrcode';
 import type { Event } from 'nostr-tools';
 
@@ -27,11 +28,17 @@ interface ZapDialogProps {
   className?: string;
 }
 
-const presetAmounts = [1, 50, 100, 250, 1000];
+const presetAmounts = [
+  { amount: 1, icon: Sparkle },
+  { amount: 50, icon: Sparkles },
+  { amount: 100, icon: Zap },
+  { amount: 250, icon: Star },
+  { amount: 1000, icon: Rocket },
+];
 
 export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const [open, setOpen] = useState(false);
-  const [webln, _setWebln] = useState<WebLNProvider | null>(null);
+  const [webln, setWebln] = useState<WebLNProvider | null>(null);
   const { user } = useCurrentUser();
   const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
@@ -46,6 +53,23 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
       setComment('Zapped with MKStack!');
     }
   }, [target]);
+
+  // Detect WebLN when dialog opens
+  useEffect(() => {
+    const detectWebLN = async () => {
+      if (open && !webln) {
+        try {
+          const provider = await requestProvider();
+          setWebln(provider);
+        } catch (error) {
+          console.warn('WebLN requestProvider failed:', error);
+          setWebln(null);
+        }
+      }
+    };
+
+    detectWebLN();
+  }, [open, webln]);
 
   useEffect(() => {
     if (invoice && qrCodeRef.current) {
@@ -81,8 +105,8 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className={className}>
-          <Zap className={`h-4 w-4 ${children ? 'mr-2' : ''}`} />
+        <Button variant="ghost" size="sm" className={`text-muted-foreground hover:text-yellow-600 ${className || ''}`}>
+          <Zap className={`h-4 w-4 ${children ? 'mr-1' : ''}`} />
           {children}
         </Button>
       </DialogTrigger>
@@ -123,12 +147,13 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
                 }}
                 className="grid grid-cols-5 gap-2"
               >
-                {presetAmounts.map((presetAmount) => (
+                {presetAmounts.map(({ amount: presetAmount, icon: Icon }) => (
                   <ToggleGroupItem
                     key={presetAmount}
                     value={String(presetAmount)}
                     className="flex flex-col h-auto"
                   >
+                    <Icon className="h-5 w-5 mb-1.5" />
                     {presetAmount}
                   </ToggleGroupItem>
                 ))}

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
-import { nip57, nip19, Event } from 'nostr-tools';
+import { nip57, nip19 } from 'nostr-tools';
+import type { Event } from 'nostr-tools';
 import type { WebLNProvider } from 'webln';
+import { LNURL } from '@nostrify/nostrify/ln';
 
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
@@ -16,7 +17,6 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
   const { toast } = useToast();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
-  const { mutate: publishEvent } = useNostrPublish();
   const author = useAuthor(target?.pubkey);
   const [isZapping, setIsZapping] = useState(false);
   const [invoice, setInvoice] = useState<string | null>(null);
@@ -86,18 +86,8 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
     }
 
     try {
-      const lud16 = author.data?.metadata?.lud16;
-      if (!lud16) {
-        toast({
-          title: 'Lightning address not found',
-          description: 'The author does not have a lightning address configured.',
-          variant: 'destructive',
-        });
-        setIsZapping(false);
-        return;
-      }
 
-      if (!author.data) {
+      if (!author.data || !author.data?.metadata) {
         toast({
           title: 'Author not found',
           description: 'Could not find the author of this item.',
@@ -107,67 +97,50 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
         return;
       }
 
-      const zapEndpoint = await nip57.getZapEndpoint(author.data.event as Event);
-      if (!zapEndpoint) {
+      const { lud06, lud16 } = author.data.metadata;
+      if (!lud16 && !lud06) {
         toast({
-          title: 'Zap endpoint not found',
-          description: 'Could not find a zap endpoint for the author.',
+          title: 'Lightning address not found',
+          description: 'The author does not have a lightning address (lud16 or lud06) configured.',
           variant: 'destructive',
         });
         setIsZapping(false);
         return;
       }
 
+      const lnurl = lud06 ? LNURL.fromString(lud06) : LNURL.fromLightningAddress(lud16!);
       const zapAmount = amount * 1000; // convert to millisats
-      const relays = [config.relayUrl];
-      const zapRequest = nip57.makeZapRequest({
+      const zapRequest = await user.signer.signEvent(nip57.makeZapRequest({
         profile: target.pubkey,
-        event: target.id,
+        event: target,
         amount: zapAmount,
-        relays,
+        relays: [config.relayUrl],
         comment: comment,
+      }));
+
+      const { pr: newInvoice } = await lnurl.getInvoice({
+        amount: zapAmount,
+        nostr: zapRequest,
       });
 
-      if (naddr) {
-        const decoded = nip19.decode(naddr).data as nip19.AddressPointer;
-        zapRequest.tags.push(["a", `${decoded.kind}:${decoded.pubkey}:${decoded.identifier}`]);
-        zapRequest.tags = zapRequest.tags.filter(t => t[0] !== 'e');
+      if (webln) {
+        await webln.sendPayment(newInvoice);
+        toast({
+          title: 'Zap successful!',
+          description: `You sent ${amount} sats to the author.`,
+        });
+        onZapSuccess?.();
+      } else {
+        setInvoice(newInvoice);
       }
-
-      publishEvent(zapRequest, {
-        onSuccess: async (event) => {
-          try {
-            const res = await fetch(`${zapEndpoint}?amount=${zapAmount}&nostr=${encodeURI(JSON.stringify(event))}`);
-            const { pr: newInvoice } = await res.json();
-
-            if (webln) {
-              await webln.sendPayment(newInvoice);
-              toast({
-                title: 'Zap successful!',
-                description: `You sent ${amount} sats to the author.`,
-              });
-              onZapSuccess?.();
-            } else {
-              setInvoice(newInvoice);
-            }
-          } catch (err) {
-            console.error('Zap error:', err);
-            toast({
-              title: 'Zap failed',
-              description: (err as Error).message,
-              variant: 'destructive',
-            });
-          } finally {
-            setIsZapping(false);
-          }
-        },
-      });
     } catch (err) {
+      console.error('Zap error:', err);
       toast({
         title: 'Zap failed',
         description: (err as Error).message,
         variant: 'destructive',
       });
+    } finally {
       setIsZapping(false);
     }
   };
