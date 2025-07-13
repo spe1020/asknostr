@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAppContext } from '@/hooks/useAppContext';
@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/useToast';
 import { useNWC } from '@/hooks/useNWCContext';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import type { NWCConnection } from '@/hooks/useNWC';
-import { nip57, nip19 } from 'nostr-tools';
+import { nip57 } from 'nostr-tools';
 import type { Event } from 'nostr-tools';
 import type { WebLNProvider } from 'webln';
 import { useQuery } from '@tanstack/react-query';
@@ -40,63 +40,140 @@ function parseNWCUri(uri: string): NWCConnection | null {
   }
 }
 
-export function useZaps(target: Event, webln: WebLNProvider | null, _nwcConnection: NWCConnection | null, onZapSuccess?: () => void) {
+export function useZaps(
+  targets: Event | Event[],
+  webln: WebLNProvider | null,
+  _nwcConnection: NWCConnection | null,
+  onZapSuccess?: () => void
+) {
   const { nostr } = useNostr();
   const { toast } = useToast();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const { mutate: publishEvent } = useNostrPublish();
-  const author = useAuthor(target?.pubkey);
+
+  // Normalize targets to array for consistent handling
+  const targetArray = useMemo(() =>
+    Array.isArray(targets) ? targets : (targets ? [targets] : []),
+    [targets]
+  );
+  const isBatchMode = Array.isArray(targets);
+  const primaryTarget = targetArray[0]; // For single-target operations like zapping
+
+  const author = useAuthor(primaryTarget?.pubkey);
   const { sendPayment, getActiveConnection, connections, activeConnection } = useNWC();
   const [isZapping, setIsZapping] = useState(false);
   const [invoice, setInvoice] = useState<string | null>(null);
 
-  const naddr =
-    target.kind >= 30000 && target.kind < 40000
-      ? nip19.naddrEncode({
-          identifier: target.tags.find((t) => t[0] === 'd')?.[1] || '',
-          pubkey: target.pubkey,
-          kind: target.kind,
-        })
-      : undefined;
+  // Create query key based on mode
+  const queryKey = isBatchMode
+    ? ['zaps-batch', targetArray.map(t => t.id).sort()]
+    : ['zaps-single', primaryTarget.id];
 
-  const queryKey = naddr ? `naddr:${naddr}` : `event:${target.id}`;
-
-  const { data: zaps, ...query } = useQuery<NostrEvent[], Error>({
-    queryKey: ['zaps', queryKey],
+  const { data: zapEvents, ...query } = useQuery<NostrEvent[], Error>({
+    queryKey,
     queryFn: async (c) => {
-      if (!target.id && !naddr) return [];
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
-
       const filters: NostrFilter[] = [];
 
-      if (naddr) {
-        try {
-          const decoded = nip19.decode(naddr);
-          if (decoded.type === 'naddr') {
-            const { kind, pubkey, identifier } = decoded.data;
-            filters.push({
-              kinds: [9735],
-              '#a': [`${kind}:${pubkey}:${identifier}`],
-            });
-          }
-        } catch (e) {
-          console.error("Invalid naddr", naddr, e);
+      if (isBatchMode) {
+        // Batch mode: get zaps for all events at once
+        const eventIds = targetArray.map(t => t.id).filter(Boolean);
+        const addressableEvents = targetArray.filter(t => t.kind >= 30000 && t.kind < 40000);
+
+        if (eventIds.length > 0) {
+          filters.push({
+            kinds: [9735],
+            '#e': eventIds,
+          });
+        }
+
+        // Handle addressable events
+        if (addressableEvents.length > 0) {
+          const addresses = addressableEvents.map(event => {
+            const identifier = event.tags.find((t) => t[0] === 'd')?.[1] || '';
+            return `${event.kind}:${event.pubkey}:${identifier}`;
+          });
+          filters.push({
+            kinds: [9735],
+            '#a': addresses,
+          });
         }
       } else {
-        filters.push({
-          kinds: [9735],
-          '#e': [target.id],
-        });
+        // Single mode: get zaps for one event
+        const target = primaryTarget;
+        if (target.kind >= 30000 && target.kind < 40000) {
+          const identifier = target.tags.find((t) => t[0] === 'd')?.[1] || '';
+          filters.push({
+            kinds: [9735],
+            '#a': [`${target.kind}:${target.pubkey}:${identifier}`],
+          });
+        } else {
+          filters.push({
+            kinds: [9735],
+            '#e': [target.id],
+          });
+        }
       }
 
       if (filters.length === 0) return [];
-
       const events = await nostr.query(filters, { signal });
       return events;
     },
-    enabled: !!target.id || !!naddr,
+    enabled: targetArray.length > 0 && targetArray.every(t => t.id),
   });
+
+  // Process zap events into organized data
+  const zapData = useMemo(() => {
+    if (!zapEvents) return {};
+
+    const organized: Record<string, { count: number; totalSats: number; events: NostrEvent[] }> = {};
+
+    zapEvents.forEach(zap => {
+      // Find which event this zap is for
+      const eventTag = zap.tags.find(([name]) => name === 'e')?.[1];
+      const addressTag = zap.tags.find(([name]) => name === 'a')?.[1];
+
+      let targetId: string | undefined;
+
+      if (eventTag) {
+        targetId = eventTag;
+      } else if (addressTag) {
+        // Find the target event that matches this address
+        const target = targetArray.find(t => {
+          if (t.kind >= 30000 && t.kind < 40000) {
+            const identifier = t.tags.find((tag) => tag[0] === 'd')?.[1] || '';
+            const address = `${t.kind}:${t.pubkey}:${identifier}`;
+            return address === addressTag;
+          }
+          return false;
+        });
+        targetId = target?.id;
+      }
+
+      if (!targetId) return;
+
+      if (!organized[targetId]) {
+        organized[targetId] = { count: 0, totalSats: 0, events: [] };
+      }
+
+      organized[targetId].count++;
+      organized[targetId].events.push(zap);
+
+      // Extract amount from amount tag
+      const amountTag = zap.tags.find(([name]) => name === 'amount')?.[1];
+      if (amountTag) {
+        const sats = Math.floor(parseInt(amountTag) / 1000); // Convert millisats to sats
+        organized[targetId].totalSats += sats;
+      }
+    });
+
+    return organized;
+  }, [zapEvents, targetArray]);
+
+  // For single mode, return the data for the primary target
+  const singleTargetData = isBatchMode ? undefined : zapData[primaryTarget.id];
+  const zaps = singleTargetData?.events;
 
   const zap = async (amount: number, comment: string) => {
     if (amount <= 0) {
@@ -155,17 +232,17 @@ export function useZaps(target: Event, webln: WebLNProvider | null, _nwcConnecti
 
       // Create zap request (unsigned, like the old implementation)
       const zapRequest = nip57.makeZapRequest({
-        profile: target.pubkey,
-        event: target.id,
+        profile: primaryTarget.pubkey,
+        event: primaryTarget.id,
         amount: zapAmount,
         relays,
         comment: comment,
       });
 
-      // Handle addressable events (restored from old implementation)
-      if (naddr) {
-        const decoded = nip19.decode(naddr).data as nip19.AddressPointer;
-        zapRequest.tags.push(["a", `${decoded.kind}:${decoded.pubkey}:${decoded.identifier}`]);
+      // Handle addressable events
+      if (primaryTarget.kind >= 30000 && primaryTarget.kind < 40000) {
+        const identifier = primaryTarget.tags.find((t) => t[0] === 'd')?.[1] || '';
+        zapRequest.tags.push(["a", `${primaryTarget.kind}:${primaryTarget.pubkey}:${identifier}`]);
         zapRequest.tags = zapRequest.tags.filter(t => t[0] !== 'e');
       }
 
@@ -299,6 +376,7 @@ export function useZaps(target: Event, webln: WebLNProvider | null, _nwcConnecti
   };
 
   return {
+    // Legacy single-target API (for backward compatibility)
     zaps,
     ...query,
     zap,
@@ -306,5 +384,12 @@ export function useZaps(target: Event, webln: WebLNProvider | null, _nwcConnecti
     invoice,
     setInvoice,
     parseNWCUri,
+
+    // New batch API
+    zapData,
+    isBatchMode,
+
+    // Helper functions
+    getZapData: (eventId: string) => zapData[eventId] || { count: 0, totalSats: 0, events: [] },
   };
 }

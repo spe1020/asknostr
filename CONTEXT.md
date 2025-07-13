@@ -655,6 +655,19 @@ export function Post(/* ...props */) {
 
 Implement zaps with a payment method fallback chain: **NWC → WebLN → Manual**. Always validate recipient lightning addresses (`lud16`/`lud06`) before creating zap requests.
 
+**⚠️ CRITICAL**: The `NWCProvider` must be included in the app's provider hierarchy for zap functionality to work. It should be placed inside `NostrProvider` but outside other UI providers:
+
+```tsx
+// In App.tsx and TestApp.tsx
+import { NWCProvider } from '@/contexts/NWCContext';
+
+<NostrProvider>
+  <NWCProvider>
+    {/* other providers and app content */}
+  </NWCProvider>
+</NostrProvider>
+```
+
 ```tsx
 // Use unified wallet detection
 const { webln, activeNWC, preferredMethod } = useWallet();
@@ -667,6 +680,7 @@ if (!author.metadata?.lud16 && !author.metadata?.lud06) {
 ```
 
 **Critical patterns:**
+- **Include NWCProvider** in the provider tree before using any zap functionality
 - Detect WebLN only when needed (dialog open)
 - Show payment method indicator to users
 - Handle errors gracefully with specific messaging

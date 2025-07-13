@@ -111,10 +111,9 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={`text-muted-foreground hover:text-yellow-600 ${className || ''}`}>
-          <Zap className={`h-4 w-4 ${children ? 'mr-1' : ''}`} />
+        <div className={`cursor-pointer ${className || ''}`}>
           {children}
-        </Button>
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]" data-testid="zap-modal">
         <DialogHeader>
