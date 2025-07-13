@@ -41,6 +41,23 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
   const { webln, activeNWC, hasWebLN, hasNWC, detectWebLN } = useWallet();
+
+  // Debug logging
+  useEffect(() => {
+    console.debug('ZapDialog wallet status:', { hasWebLN, hasNWC, activeNWC: !!activeNWC });
+  }, [hasWebLN, hasNWC, activeNWC]);
+
+  // Additional debug logging when dialog opens
+  useEffect(() => {
+    if (open) {
+      console.debug('ZapDialog opened with wallet status:', {
+        hasWebLN,
+        hasNWC,
+        activeNWC: activeNWC ? { alias: activeNWC.alias, isConnected: activeNWC.isConnected } : null
+      });
+    }
+  }, [open, hasWebLN, hasNWC, activeNWC]);
+
   const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, activeNWC, () => setOpen(false));
   const [amount, setAmount] = useState<number | string>(100);
   const [comment, setComment] = useState<string>('');

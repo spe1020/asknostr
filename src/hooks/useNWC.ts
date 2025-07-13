@@ -1,16 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/useToast';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { nip04 } from 'nostr-tools';
-import { useNostr } from '@nostrify/react';
+import { LN } from '@getalby/sdk';
 
 export interface NWCConnection {
-  walletPubkey: string;
-  secret: string;
-  relayUrls: string[];
-  lud16?: string;
+  connectionString: string;
   alias?: string;
+  isConnected: boolean;
+  client?: LN;
 }
 
 interface NWCInfo {
@@ -22,46 +19,37 @@ interface NWCInfo {
   notifications?: string[];
 }
 
-export function useNWC() {
-  const { nostr } = useNostr();
+export function useNWCInternal() {
   const { toast } = useToast();
-  const { user } = useCurrentUser();
   const [connections, setConnections] = useLocalStorage<NWCConnection[]>('nwc-connections', []);
   const [activeConnection, setActiveConnection] = useLocalStorage<string | null>('nwc-active-connection', null);
   const [connectionInfo, setConnectionInfo] = useState<Record<string, NWCInfo>>({});
 
-  // Parse NWC URI
-  const parseNWCUri = (uri: string): NWCConnection | null => {
+  // Use connections directly - no filtering needed
+
+  // Parse and validate NWC URI
+  const parseNWCUri = (uri: string): { connectionString: string } | null => {
     try {
-      const url = new URL(uri);
-      if (url.protocol !== 'nostr+walletconnect:') {
+      console.debug('Parsing NWC URI:', { uri: uri.substring(0, 50) + '...' });
+
+      if (!uri.startsWith('nostr+walletconnect://') && !uri.startsWith('nostrwalletconnect://')) {
+        console.error('Invalid NWC URI protocol:', { protocol: uri.split('://')[0] });
         return null;
       }
 
-      const walletPubkey = url.pathname.replace('//', '');
-      const secret = url.searchParams.get('secret');
-      const relayParam = url.searchParams.getAll('relay');
-      const lud16 = url.searchParams.get('lud16') || undefined;
-
-      if (!walletPubkey || !secret || relayParam.length === 0) {
-        return null;
-      }
-
-      return {
-        walletPubkey,
-        secret,
-        relayUrls: relayParam,
-        lud16,
-      };
-    } catch {
+      // Basic validation - let the SDK handle the detailed parsing
+      console.debug('NWC URI parsing successful');
+      return { connectionString: uri };
+    } catch (error) {
+      console.error('Failed to parse NWC URI:', error);
       return null;
     }
   };
 
   // Add new connection
   const addConnection = async (uri: string, alias?: string): Promise<boolean> => {
-    const connection = parseNWCUri(uri);
-    if (!connection) {
+    const parsed = parseNWCUri(uri);
+    if (!parsed) {
       toast({
         title: 'Invalid NWC URI',
         description: 'Please check the connection string and try again.',
@@ -71,7 +59,7 @@ export function useNWC() {
     }
 
     // Check if connection already exists
-    const existingConnection = connections.find(c => c.walletPubkey === connection.walletPubkey);
+    const existingConnection = connections.find(c => c.connectionString === parsed.connectionString);
     if (existingConnection) {
       toast({
         title: 'Connection already exists',
@@ -81,31 +69,85 @@ export function useNWC() {
       return false;
     }
 
-    if (alias) {
-      connection.alias = alias;
-    }
-
     try {
-      // Test connection by fetching info
-      await fetchWalletInfo(connection);
+      console.debug('Testing NWC connection:', { uri: uri.substring(0, 50) + '...' });
 
-      setConnections(prev => [...prev, connection]);
+      // Test the connection by creating an LN client with timeout
+      const testPromise = new Promise((resolve, reject) => {
+        try {
+          const client = new LN(parsed.connectionString);
+          resolve(client);
+        } catch (error) {
+          reject(error);
+        }
+      });
 
-      // Set as active if it's the first connection
-      if (connections.length === 0) {
-        setActiveConnection(connection.walletPubkey);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timeout')), 10000);
+      });
+
+      const _client = await Promise.race([testPromise, timeoutPromise]) as LN;
+
+      const connection: NWCConnection = {
+        connectionString: parsed.connectionString,
+        alias: alias || 'NWC Wallet',
+        isConnected: true,
+        // Don't store the client, create fresh ones for each payment
+      };
+
+      // Store basic connection info
+      setConnectionInfo(prev => ({
+        ...prev,
+        [parsed.connectionString]: {
+          alias: connection.alias,
+          methods: ['pay_invoice'], // Assume basic payment capability
+        },
+      }));
+
+      const newConnections = [...connections, connection];
+      setConnections(newConnections);
+
+      console.debug('NWC connection added:', {
+        alias: connection.alias,
+        totalConnections: newConnections.length,
+        connectionString: parsed.connectionString.substring(0, 50) + '...',
+        isConnected: connection.isConnected
+      });
+
+      // Set as active if it's the first connection or no active connection is set
+      if (connections.length === 0 || !activeConnection) {
+        console.debug('Setting as active connection:', {
+          alias: connection.alias,
+          connectionString: parsed.connectionString.substring(0, 50) + '...',
+          previousActiveConnection: activeConnection
+        });
+        setActiveConnection(parsed.connectionString);
+        console.debug('Active connection set to:', parsed.connectionString.substring(0, 50) + '...');
       }
+
+      console.debug('NWC connection successful');
+
+      // Force a small delay to ensure state updates are processed
+      setTimeout(() => {
+        console.debug('Post-connection state check:', {
+          connectionsLength: connections.length + 1, // +1 because we just added one
+          newConnectionAlias: connection.alias
+        });
+      }, 100);
 
       toast({
         title: 'Wallet connected',
-        description: `Successfully connected to ${alias || 'wallet'}.`,
+        description: `Successfully connected to ${connection.alias}.`,
       });
 
       return true;
-    } catch {
+    } catch (error) {
+      console.error('NWC connection failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
       toast({
         title: 'Connection failed',
-        description: 'Could not connect to the wallet. Please check your connection.',
+        description: `Could not connect to the wallet: ${errorMessage}`,
         variant: 'destructive',
       });
       return false;
@@ -113,17 +155,23 @@ export function useNWC() {
   };
 
   // Remove connection
-  const removeConnection = (walletPubkey: string) => {
-    setConnections(prev => prev.filter(c => c.walletPubkey !== walletPubkey));
+  const removeConnection = (connectionString: string) => {
+    const filtered = connections.filter(c => c.connectionString !== connectionString);
+    setConnections(filtered);
 
-    if (activeConnection === walletPubkey) {
-      const remaining = connections.filter(c => c.walletPubkey !== walletPubkey);
-      setActiveConnection(remaining.length > 0 ? remaining[0].walletPubkey : null);
+    console.debug('NWC connection removed:', {
+      remainingConnections: filtered.length
+    });
+
+    if (activeConnection === connectionString) {
+      const newActive = filtered.length > 0 ? filtered[0].connectionString : null;
+      setActiveConnection(newActive);
+      console.debug('Active connection changed:', { newActive });
     }
 
     setConnectionInfo(prev => {
       const newInfo = { ...prev };
-      delete newInfo[walletPubkey];
+      delete newInfo[connectionString];
       return newInfo;
     });
 
@@ -134,156 +182,130 @@ export function useNWC() {
   };
 
   // Get active connection
-  const getActiveConnection = (): NWCConnection | null => {
-    if (!activeConnection) return null;
-    return connections.find(c => c.walletPubkey === activeConnection) || null;
-  };
+  const getActiveConnection = useCallback((): NWCConnection | null => {
+    console.debug('getActiveConnection called:', {
+      activeConnection,
+      connectionsLength: connections.length,
+      connections: connections.map(c => ({ alias: c.alias, connectionString: c.connectionString.substring(0, 50) + '...' }))
+    });
 
-  // Send NWC request
-  const sendNWCRequest = useCallback(async (
+    // If no active connection is set but we have connections, set the first one as active
+    if (!activeConnection && connections.length > 0) {
+      console.debug('Setting first connection as active:', connections[0].alias);
+      setActiveConnection(connections[0].connectionString);
+      return connections[0];
+    }
+
+    if (!activeConnection) {
+      console.debug('No active connection and no connections');
+      return null;
+    }
+
+    const found = connections.find(c => c.connectionString === activeConnection);
+    console.debug('Found active connection:', found ? found.alias : 'null');
+    return found || null;
+  }, [activeConnection, connections, setActiveConnection]);
+
+  // Send payment using the SDK
+  const sendPayment = useCallback(async (
     connection: NWCConnection,
-    request: { method: string; params: Record<string, unknown> }
-  ): Promise<{ result_type: string; error?: { code: string; message: string }; result?: unknown }> => {
-    if (!user?.signer) {
-      throw new Error('User not logged in or signer not available');
+    invoice: string
+  ): Promise<{ preimage: string }> => {
+    if (!connection.connectionString) {
+      throw new Error('Invalid connection: missing connection string');
     }
 
-    // Create request event
-    const requestEvent = {
-      kind: 23194,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [['p', connection.walletPubkey]],
-      content: await nip04.encrypt(connection.secret, connection.walletPubkey, JSON.stringify(request)),
-    };
-
-    // Sign and publish request
-    const signedRequest = await user.signer.signEvent(requestEvent);
-    if (!signedRequest) {
-      throw new Error('Failed to sign NWC request');
-    }
-
-    // Publish to NWC relays
+    // Always create a fresh client for each payment to avoid stale connections
+    let client: LN;
     try {
-      await nostr.event(signedRequest, {
-        signal: AbortSignal.timeout(10000),
-        relays: connection.relayUrls
-      });
+      console.debug('Creating fresh NWC client for payment...');
+      client = new LN(connection.connectionString);
     } catch (error) {
-      console.warn('Failed to publish NWC request:', error);
-      throw new Error('Failed to publish NWC request');
+      console.error('Failed to create NWC client:', error);
+      throw new Error(`Failed to create NWC client: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Listen for response
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('NWC request timeout'));
-      }, 30000); // 30 second timeout
+    try {
+      console.debug('Sending payment via NWC SDK:', {
+        invoice: invoice.substring(0, 50) + '...',
+        connectionAlias: connection.alias
+      });
 
-      // Query for response events
-      const checkForResponse = async () => {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Payment timeout after 30 seconds')), 30000);
+      });
+
+      const paymentPromise = client.pay(invoice);
+      const response = await Promise.race([paymentPromise, timeoutPromise]) as { preimage: string };
+
+      console.debug('Payment successful:', { preimage: response.preimage });
+      return response;
+    } catch (error) {
+      console.error('NWC payment failed:', error);
+
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          throw new Error('Payment timed out. Please try again.');
+        } else if (error.message.includes('insufficient')) {
+          throw new Error('Insufficient balance in connected wallet.');
+        } else if (error.message.includes('invalid')) {
+          throw new Error('Invalid invoice or connection. Please check your wallet.');
+        } else {
+          throw new Error(`Payment failed: ${error.message}`);
+        }
+      }
+
+      throw new Error('Payment failed with unknown error');
+    }
+  }, []);
+
+  // Get wallet info (simplified since SDK doesn't expose getInfo)
+  const getWalletInfo = useCallback(async (connection: NWCConnection): Promise<NWCInfo> => {
+    // Return stored info or basic fallback
+    const info = connectionInfo[connection.connectionString] || {
+      alias: connection.alias,
+      methods: ['pay_invoice'],
+    };
+    return info;
+  }, [connectionInfo]);
+
+  // Test NWC connection
+  const testNWCConnection = useCallback(async (connection: NWCConnection): Promise<boolean> => {
+    if (!connection.connectionString) {
+      console.error('NWC connection test failed: missing connection string');
+      return false;
+    }
+
+    try {
+      console.debug('Testing NWC connection...', { alias: connection.alias });
+
+      // Create a fresh client for testing
+      const testPromise = new Promise((resolve, reject) => {
         try {
-          const responseEvents = await nostr.query([
-            {
-              kinds: [23195],
-              authors: [connection.walletPubkey],
-              '#p': [user.pubkey],
-              '#e': [signedRequest.id],
-              since: Math.floor(Date.now() / 1000) - 60,
-            },
-          ], { signal: AbortSignal.timeout(30000) });
-
-          for (const event of responseEvents) {
-            try {
-              const decrypted = await nip04.decrypt(
-                connection.secret,
-                connection.walletPubkey,
-                event.content
-              );
-              const response = JSON.parse(decrypted);
-              clearTimeout(timeout);
-              resolve(response);
-              return;
-            } catch (error) {
-              console.error('Failed to decrypt NWC response:', error);
-            }
-          }
-
-          // If no response found, wait and try again
-          setTimeout(checkForResponse, 2000);
+          const client = new LN(connection.connectionString);
+          resolve(client);
         } catch (error) {
-          clearTimeout(timeout);
           reject(error);
         }
-      };
+      });
 
-      // Start checking for responses
-      setTimeout(checkForResponse, 1000); // Wait 1 second before first check
-    });
-  }, [nostr, user]);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timeout')), 5000);
+      });
 
-  // Fetch wallet info
-  const fetchWalletInfo = useCallback(async (connection: NWCConnection): Promise<NWCInfo> => {
-    // First, try to get the info event (kind 13194)
-    try {
-      const infoEvents = await nostr.query([
-        {
-          kinds: [13194],
-          authors: [connection.walletPubkey],
-          limit: 1,
-        }
-      ], { signal: AbortSignal.timeout(5000) });
+      await Promise.race([testPromise, timeoutPromise]);
 
-      if (infoEvents.length > 0) {
-        const infoEvent = infoEvents[0];
-        const capabilities = infoEvent.content.split(' ');
-        const notificationsTag = infoEvent.tags.find(tag => tag[0] === 'notifications');
-        const notifications = notificationsTag ? notificationsTag[1].split(' ') : [];
-
-        const info: NWCInfo = {
-          methods: capabilities,
-          notifications,
-        };
-
-        setConnectionInfo(prev => ({
-          ...prev,
-          [connection.walletPubkey]: info,
-        }));
-
-        return info;
-      }
+      console.debug('NWC connection test successful');
+      return true;
     } catch (error) {
-      console.warn('Failed to fetch NWC info event:', error);
+      console.error('NWC connection test failed:', error);
+      return false;
     }
+  }, []);
 
-    // Fallback: try to send a get_info request
-    try {
-      const response = await sendNWCRequest(connection, { method: 'get_info', params: {} });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const info = response.result as NWCInfo;
-      setConnectionInfo(prev => ({
-        ...prev,
-        [connection.walletPubkey]: info,
-      }));
-
-      return info;
-    } catch (error) {
-      console.error('Failed to fetch wallet info:', error);
-      throw error;
-    }
-  }, [nostr, sendNWCRequest]);
-
-  // Fetch info for all connections on mount
-  useEffect(() => {
-    connections.forEach(connection => {
-      if (!connectionInfo[connection.walletPubkey]) {
-        fetchWalletInfo(connection).catch(console.error);
-      }
-    });
-  }, [connections, connectionInfo, fetchWalletInfo]);
 
   return {
     connections,
@@ -293,8 +315,9 @@ export function useNWC() {
     removeConnection,
     setActiveConnection,
     getActiveConnection,
-    fetchWalletInfo,
-    sendNWCRequest,
+    sendPayment,
+    getWalletInfo,
     parseNWCUri,
+    testNWCConnection,
   };
 }

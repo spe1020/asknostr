@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Wallet, Plus, Trash2, Zap, Globe, Settings, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useNWC } from '@/hooks/useNWC';
+import { useNWC } from '@/hooks/useNWCContext';
 import { useWallet } from '@/hooks/useWallet';
 import { useToast } from '@/hooks/useToast';
 
@@ -40,8 +40,22 @@ export function WalletModal({ children, className }: WalletModalProps) {
     setActiveConnection
   } = useNWC();
 
-  const { hasWebLN, hasNWC, isDetecting } = useWallet();
+  const { hasWebLN, isDetecting } = useWallet();
+
+  // Calculate hasNWC directly from connections to ensure reactivity
+  const hasNWC = connections.length > 0 && connections.some(c => c.isConnected);
   const { toast } = useToast();
+
+  // Debug logging for wallet modal status
+  useEffect(() => {
+    console.debug('WalletModal status:', {
+      hasWebLN,
+      hasNWC,
+      connectionsCount: connections.length,
+      connectionsDetails: connections.map(c => ({ alias: c.alias, isConnected: c.isConnected })),
+      isDetecting
+    });
+  }, [hasWebLN, hasNWC, connections, isDetecting]);
 
   const handleAddConnection = async () => {
     if (!connectionUri.trim()) {
@@ -53,32 +67,60 @@ export function WalletModal({ children, className }: WalletModalProps) {
       return;
     }
 
+    console.debug('WalletModal: Before adding connection', {
+      currentConnections: connections.length,
+      hasNWC
+    });
+
     setIsConnecting(true);
     try {
       const success = await addConnection(connectionUri.trim(), alias.trim() || undefined);
       if (success) {
+        console.debug('WalletModal: Connection added successfully', {
+          newConnections: connections.length,
+          hasNWC
+        });
         setConnectionUri('');
         setAlias('');
         setAddDialogOpen(false);
+
+        // Force a small delay to check state after React updates
+        setTimeout(() => {
+          console.debug('WalletModal: Post-add state check', {
+            connectionsLength: connections.length,
+            hasNWC
+          });
+        }, 100);
       }
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const handleRemoveConnection = (walletPubkey: string) => {
-    removeConnection(walletPubkey);
+  const handleRemoveConnection = (connectionString: string) => {
+    console.debug('WalletModal: Before removing connection', {
+      currentConnections: connections.length,
+      hasNWC
+    });
+
+    removeConnection(connectionString);
+
+    // Force a small delay to check state after React updates
+    setTimeout(() => {
+      console.debug('WalletModal: Post-remove state check', {
+        connectionsLength: connections.length,
+        hasNWC
+      });
+    }, 100);
   };
 
-  const handleSetActive = (walletPubkey: string) => {
-    setActiveConnection(walletPubkey);
+  const handleSetActive = (connectionString: string) => {
+    setActiveConnection(connectionString);
     toast({
       title: 'Active wallet changed',
       description: 'The selected wallet is now active for zaps.',
     });
   };
-
-
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -208,11 +250,11 @@ export function WalletModal({ children, className }: WalletModalProps) {
             ) : (
               <div className="space-y-2">
                 {connections.map((connection) => {
-                  const info = connectionInfo[connection.walletPubkey];
-                  const isActive = activeConnection === connection.walletPubkey;
+                  const info = connectionInfo[connection.connectionString];
+                  const isActive = activeConnection === connection.connectionString;
 
                   return (
-                    <div key={connection.walletPubkey} className={`flex items-center justify-between p-3 border rounded-lg ${isActive ? 'ring-2 ring-primary' : ''}`}>
+                    <div key={connection.connectionString} className={`flex items-center justify-between p-3 border rounded-lg ${isActive ? 'ring-2 ring-primary' : ''}`}>
                       <div className="flex items-center gap-3">
                         <Settings className="h-4 w-4 text-muted-foreground" />
                         <div>
@@ -220,7 +262,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
                             {connection.alias || info?.alias || 'Lightning Wallet'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {connection.walletPubkey.slice(0, 16)}...
+                            NWC Connection
                           </p>
                         </div>
                       </div>
@@ -230,7 +272,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleSetActive(connection.walletPubkey)}
+                            onClick={() => handleSetActive(connection.connectionString)}
                           >
                             <Zap className="h-3 w-3" />
                           </Button>
@@ -238,7 +280,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleRemoveConnection(connection.walletPubkey)}
+                          onClick={() => handleRemoveConnection(connection.connectionString)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

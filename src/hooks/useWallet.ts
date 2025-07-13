@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNWC } from '@/hooks/useNWC';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNWC } from '@/hooks/useNWCContext';
 import type { WebLNProvider } from 'webln';
 import { requestProvider } from 'webln';
 
@@ -15,37 +15,46 @@ export interface WalletStatus {
 export function useWallet() {
   const [webln, setWebln] = useState<WebLNProvider | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
-  const { getActiveConnection } = useNWC();
-  
+  const [hasAttemptedDetection, setHasAttemptedDetection] = useState(false);
+  const { connections, getActiveConnection } = useNWC();
+
+  // Get the active connection directly - no memoization to avoid stale state
   const activeNWC = getActiveConnection();
 
   // Detect WebLN
   const detectWebLN = useCallback(async () => {
     if (webln || isDetecting) return webln;
-    
+
     setIsDetecting(true);
     try {
       const provider = await requestProvider();
       setWebln(provider);
+      setHasAttemptedDetection(true);
       return provider;
     } catch (error) {
-      console.warn('WebLN not available:', error);
+      // Only log the error if it's not the common "no provider" error
+      if (error instanceof Error && !error.message.includes('no WebLN provider')) {
+        console.warn('WebLN detection error:', error);
+      }
       setWebln(null);
+      setHasAttemptedDetection(true);
       return null;
     } finally {
       setIsDetecting(false);
     }
   }, [webln, isDetecting]);
 
-  // Auto-detect on mount
+  // Only auto-detect once on mount, don't spam detection
   useEffect(() => {
-    detectWebLN();
-  }, [detectWebLN]);
+    if (!hasAttemptedDetection) {
+      detectWebLN();
+    }
+  }, [detectWebLN, hasAttemptedDetection]);
 
   // Test WebLN connection
   const testWebLN = useCallback(async (): Promise<boolean> => {
     if (!webln) return false;
-    
+
     try {
       await webln.enable();
       return true;
@@ -55,24 +64,41 @@ export function useWallet() {
     }
   }, [webln]);
 
+  // Calculate status values reactively
+  const hasNWC = useMemo(() => {
+    return connections.length > 0 && connections.some(c => c.isConnected);
+  }, [connections]);
+
   // Determine preferred payment method
-  const preferredMethod: WalletStatus['preferredMethod'] = activeNWC 
-    ? 'nwc' 
-    : webln 
-    ? 'webln' 
+  const preferredMethod: WalletStatus['preferredMethod'] = activeNWC
+    ? 'nwc'
+    : webln
+    ? 'webln'
     : 'manual';
 
   const status: WalletStatus = {
     hasWebLN: !!webln,
-    hasNWC: !!activeNWC,
+    hasNWC,
     webln,
     activeNWC,
     isDetecting,
     preferredMethod,
   };
 
+  // Debug logging for wallet status changes
+  useEffect(() => {
+    console.debug('Wallet status updated:', {
+      hasWebLN: status.hasWebLN,
+      hasNWC: status.hasNWC,
+      connectionsCount: connections.length,
+      activeNWC: !!status.activeNWC,
+      preferredMethod: status.preferredMethod
+    });
+  }, [status.hasWebLN, status.hasNWC, connections.length, status.activeNWC, status.preferredMethod]);
+
   return {
     ...status,
+    hasAttemptedDetection,
     detectWebLN,
     testWebLN,
   };
