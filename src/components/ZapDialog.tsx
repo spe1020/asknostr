@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Zap, Copy, Sparkle, Sparkles, Star, Rocket } from 'lucide-react';
+import { Zap, Copy, Sparkle, Sparkles, Star, Rocket, Wallet, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,8 +17,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useToast } from '@/hooks/useToast';
 import { useZaps } from '@/hooks/useZaps';
-import type { WebLNProvider } from 'webln';
-import { requestProvider } from 'webln';
+import { useWallet } from '@/hooks/useWallet';
 import QRCode from 'qrcode';
 import type { Event } from 'nostr-tools';
 
@@ -38,11 +37,11 @@ const presetAmounts = [
 
 export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const [open, setOpen] = useState(false);
-  const [webln, setWebln] = useState<WebLNProvider | null>(null);
   const { user } = useCurrentUser();
   const { data: author } = useAuthor(target.pubkey);
   const { toast } = useToast();
-  const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, () => setOpen(false));
+  const { webln, activeNWC, hasWebLN, hasNWC, detectWebLN } = useWallet();
+  const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, activeNWC, () => setOpen(false));
   const [amount, setAmount] = useState<number | string>(100);
   const [comment, setComment] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,20 +55,10 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
 
   // Detect WebLN when dialog opens
   useEffect(() => {
-    const detectWebLN = async () => {
-      if (open && !webln) {
-        try {
-          const provider = await requestProvider();
-          setWebln(provider);
-        } catch (error) {
-          console.warn('WebLN requestProvider failed:', error);
-          setWebln(null);
-        }
-      }
-    };
-
-    detectWebLN();
-  }, [open, webln]);
+    if (open && !hasWebLN) {
+      detectWebLN();
+    }
+  }, [open, hasWebLN, detectWebLN]);
 
   useEffect(() => {
     if (invoice && qrCodeRef.current) {
@@ -136,6 +125,28 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           </div>
         ) : (
           <>
+            {/* Payment Method Indicator */}
+            <div className="flex items-center justify-center py-2 px-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {hasNWC ? (
+                  <>
+                    <Wallet className="h-4 w-4 text-green-600" />
+                    <span>Wallet Connected</span>
+                  </>
+                ) : hasWebLN ? (
+                  <>
+                    <Globe className="h-4 w-4 text-blue-600" />
+                    <span>WebLN Available</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span>Manual Payment</span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="grid gap-4 py-4">
               <ToggleGroup
                 type="single"

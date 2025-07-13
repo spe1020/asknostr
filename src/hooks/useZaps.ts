@@ -3,21 +3,51 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
+import { useNWC } from '@/hooks/useNWC';
+import type { NWCConnection } from '@/hooks/useNWC';
 import { nip57, nip19 } from 'nostr-tools';
 import type { Event } from 'nostr-tools';
 import type { WebLNProvider } from 'webln';
 import { LNURL } from '@nostrify/nostrify/ln';
-
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent, NostrFilter } from '@nostrify/nostrify';
 
-export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess?: () => void) {
+// NWC utility functions
+function parseNWCUri(uri: string): NWCConnection | null {
+  try {
+    const url = new URL(uri);
+    if (url.protocol !== 'nostr+walletconnect:') {
+      return null;
+    }
+
+    const walletPubkey = url.pathname.replace('//', '');
+    const secret = url.searchParams.get('secret');
+    const relayParam = url.searchParams.getAll('relay');
+    const lud16 = url.searchParams.get('lud16') || undefined;
+
+    if (!walletPubkey || !secret || relayParam.length === 0) {
+      return null;
+    }
+
+    return {
+      walletPubkey,
+      secret,
+      relayUrls: relayParam,
+      lud16,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function useZaps(target: Event, webln: WebLNProvider | null, nwcConnection: NWCConnection | null, onZapSuccess?: () => void) {
   const { nostr } = useNostr();
   const { toast } = useToast();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const author = useAuthor(target?.pubkey);
+  const { sendNWCRequest } = useNWC();
   const [isZapping, setIsZapping] = useState(false);
   const [invoice, setInvoice] = useState<string | null>(null);
 
@@ -86,7 +116,6 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
     }
 
     try {
-
       if (!author.data || !author.data?.metadata) {
         toast({
           title: 'Author not found',
@@ -123,6 +152,38 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
         nostr: zapRequest,
       });
 
+      // Try NWC first if available
+      if (nwcConnection) {
+        try {
+          const response = await sendNWCRequest(nwcConnection, {
+            method: 'pay_invoice',
+            params: {
+              invoice: newInvoice,
+              amount: zapAmount,
+            },
+          });
+
+          if (response.error) {
+            throw new Error(`NWC Error: ${response.error.message}`);
+          }
+
+          toast({
+            title: 'Zap successful!',
+            description: `You sent ${amount} sats via NWC to the author.`,
+          });
+          onZapSuccess?.();
+          return;
+        } catch (nwcError) {
+          console.error('NWC payment failed, falling back:', nwcError);
+          toast({
+            title: 'NWC payment failed',
+            description: 'Falling back to manual payment...',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      // Fallback to WebLN or manual payment
       if (webln) {
         await webln.sendPayment(newInvoice);
         toast({
@@ -145,5 +206,13 @@ export function useZaps(target: Event, webln: WebLNProvider | null, onZapSuccess
     }
   };
 
-  return { zaps, ...query, zap, isZapping, invoice, setInvoice };
+  return {
+    zaps,
+    ...query,
+    zap,
+    isZapping,
+    invoice,
+    setInvoice,
+    parseNWCUri,
+  };
 }
