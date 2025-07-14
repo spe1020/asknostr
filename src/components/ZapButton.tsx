@@ -20,12 +20,12 @@ export function ZapButton({
   zapData: externalZapData
 }: ZapButtonProps) {
   const { user } = useCurrentUser();
-  const { data: author } = useAuthor(target.pubkey);
+  const { data: author } = useAuthor(target?.pubkey || '');
   const { webln, activeNWC } = useWallet();
 
   // Only fetch data if not provided externally
   const { totalSats: fetchedTotalSats, isLoading } = useZaps(
-    externalZapData ? [] : target, // Empty array prevents fetching if external data provided
+    externalZapData ? [] : target ?? [], // Empty array prevents fetching if external data provided
     webln,
     activeNWC
   );

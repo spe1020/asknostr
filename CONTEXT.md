@@ -499,6 +499,8 @@ The `LoginArea` component handles all the login-related UI and interactions, inc
 
 `LoginArea` displays a "Log in" button when the user is logged out, and changes to an account switcher once the user is logged in. It is an inline-flex element by default. To make it expand to the width of its container, you can pass a className like `flex` (to make it a block element) or `w-full`. If it is left as inline-flex, it's recommended to set a max width.
 
+**Important**: Social applications should include a profile menu button in the main interface (typically in headers/navigation) to provide access to account settings, profile editing, and logout functionality. Don't only show `LoginArea` in logged-out states.
+
 ### `npub`, `naddr`, and other Nostr addresses
 
 Nostr defines a set identifiers in NIP-19. Their prefixes:
@@ -706,6 +708,7 @@ if (!author.metadata?.lud16 && !author.metadata?.lud06) {
 **Critical patterns:**
 - **Include NWCProvider** in the provider tree before using any zap functionality
 - **Use existing `useZaps` hook** - it handles both single events and arrays
+- **Avoid duplicate zap displays** - ZapButton already includes count display, don't add separate badges
 - Detect WebLN only when needed (dialog open)
 - Show payment method indicator to users
 - Handle errors gracefully with specific messaging
