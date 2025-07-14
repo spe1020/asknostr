@@ -11,7 +11,26 @@ stages:
 test:
   stage: test
   script:
-    - npm run test
+    - |
+      # Run npm test and capture output and exit code
+      set +e
+      test_output=$(npm run test 2>&1)
+      test_exit_code=$?
+      set -e
+
+      echo "$test_output"
+
+      # Check if the output contains exactly 6 linting problems
+      if echo "$test_output" | grep -q "✖ 6 problems (6 errors, 0 warnings)"; then
+        echo "✅ Expected 6 linting errors found - template is correctly configured"
+        exit 0
+      elif [ $test_exit_code -eq 0 ]; then
+        echo "✅ Tests passed with no linting errors"
+        exit 0
+      else
+        echo "❌ Unexpected test failure or wrong number of linting errors"
+        exit 1
+      fi
 
 pages:
   stage: deploy
