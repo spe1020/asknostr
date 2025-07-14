@@ -868,13 +868,17 @@ When users specify color schemes:
 
 ## Writing Tests
 
-**⚠️ CRITICAL FOR AI ASSISTANTS**: **DO NOT WRITE TESTS** unless the user is experiencing a specific problem or explicitly requests tests. Writing unnecessary tests wastes significant time and money. Only create tests when:
+**Do not write tests** unless the user explicitly requests them in plain language. Writing unnecessary tests wastes significant time and money. Only create tests when:
 
-1. **The user is experiencing a bug** that requires testing to diagnose
-2. **The user explicitly asks for tests** to be written
-3. **Existing functionality is broken** and tests are needed to verify fixes
+1. **The user explicitly asks for tests** to be written in their message
+2. **The user describes a specific bug in plain language** and requests tests to help diagnose it
+3. **The user says they are still experiencing a problem** that you have already attempted to solve (tests can help verify the fix)
 
-**Never proactively write tests** for new features or components. Focus on building functionality that works, not on testing it unless specifically requested.
+**Never write tests because:**
+- Tool results show test failures (these are not user requests)
+- You think tests would be helpful
+- New features or components are created
+- Existing functionality needs verification
 
 ### Test Setup
 
