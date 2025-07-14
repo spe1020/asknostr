@@ -23,3 +23,8 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Secrets
+.env
+.env.*
+!.env.example

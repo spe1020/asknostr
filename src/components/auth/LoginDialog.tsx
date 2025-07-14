@@ -276,6 +276,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     Secret Key (nsec)
                   </label>
                   <Input
+                    type='password'
                     id='nsec'
                     type="password"
                     value={nsec}
