@@ -596,8 +596,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                 <Button
                   className={`w-full rounded-full py-4 text-base font-semibold transform transition-all duration-200 shadow-lg ${
                     keySecured !== 'none'
-                      ? 'bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 hover:scale-105'
-                      : 'bg-gradient-to-r from-purple-600/60 to-yellow-600/60 text-foreground cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-950/50 dark:to-purple-950/50 hover:scale-105'
+                      : 'bg-gradient-to-r from-blue-600/60 to-indigo-600/60 text-muted cursor-not-allowed'
                   }`}
                   onClick={finishKeySetup}
                   disabled={keySecured === 'none'}
