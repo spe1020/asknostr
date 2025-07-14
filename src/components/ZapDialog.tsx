@@ -248,8 +248,6 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
-
-
   useEffect(() => {
     if (target) {
       setComment('Zapped with MKStack!');
