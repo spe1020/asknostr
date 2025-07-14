@@ -146,7 +146,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           </DialogDescription>
         </DialogHeader>
         {invoice ? (
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] p-1">
             {/* Payment amount display */}
             <div className="text-center">
               <div className="text-2xl font-bold">{amount} sats</div>

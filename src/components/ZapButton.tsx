@@ -31,7 +31,7 @@ export function ZapButton({
   );
 
   // Don't show zap button if user is not logged in, is the author, or author has no lightning address
-  if (!user || user.pubkey === target.pubkey || (!author?.metadata?.lud16 && !author?.metadata?.lud06)) {
+  if (!user || !target || user.pubkey === target.pubkey || (!author?.metadata?.lud16 && !author?.metadata?.lud06)) {
     return null;
   }
 
