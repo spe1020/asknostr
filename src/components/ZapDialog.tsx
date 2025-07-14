@@ -334,6 +334,21 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     }
   }, [open, setInvoice]);
 
+  // Force drawer to expand to full height when showing invoice on mobile
+  useEffect(() => {
+    if (isMobile && open && invoice) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const drawerContent = document.querySelector('[data-testid="zap-modal"]') as HTMLElement;
+        if (drawerContent) {
+          // Force the drawer to full height
+          drawerContent.style.height = '100%';
+          drawerContent.style.maxHeight = '95vh';
+        }
+      });
+    }
+  }, [isMobile, open, invoice]);
+
   const handleZap = () => {
     const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
     zap(finalAmount, comment);
@@ -374,7 +389,8 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           </div>
         </DrawerTrigger>
         <DrawerContent
-          className={invoice ? "h-full" : "max-h-[95vh]"}
+          key={invoice ? 'payment' : 'form'}
+          className={invoice ? "h-full max-h-screen" : "max-h-[95vh]"}
           data-testid="zap-modal"
         >
           <DrawerHeader className="text-center relative">
@@ -416,7 +432,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
               )}
             </DrawerDescription>
           </DrawerHeader>
-          <div className={invoice ? "flex-1 overflow-y-auto px-2 pb-4" : "overflow-y-auto"}>
+          <div className={invoice ? "flex-1 overflow-y-auto px-2 pb-4 min-h-0" : "overflow-y-auto"}>
             <ZapContent {...contentProps} />
           </div>
         </DrawerContent>
