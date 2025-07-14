@@ -341,7 +341,6 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
       requestAnimationFrame(() => {
         const drawerContent = document.querySelector('[data-testid="zap-modal"]') as HTMLElement;
         if (drawerContent) {
-          // Force the drawer to full height
           drawerContent.style.height = '100%';
           drawerContent.style.maxHeight = '95vh';
         }
