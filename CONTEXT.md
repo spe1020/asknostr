@@ -524,74 +524,44 @@ Nostr defines a set of bech32-encoded identifiers in NIP-19. Their prefixes and 
 
 **Critical**: NIP-19 identifiers should be handled at the **root level** of URLs (e.g., `/note1...`, `/npub1...`, `/naddr1...`), NOT nested under paths like `/note/note1...` or `/profile/npub1...`.
 
+This project includes a boilerplate `NIP19Page` component that provides the foundation for handling all NIP-19 identifier types at the root level. The component is configured in the routing system and ready for AI agents to populate with specific functionality.
+
+**How it works:**
+
+1. **Root-Level Route**: The route `/:nip19` in `AppRouter.tsx` catches all NIP-19 identifiers
+2. **Automatic Decoding**: The `NIP19Page` component automatically decodes the identifier using `nip19.decode()`
+3. **Type-Specific Sections**: Different sections are rendered based on the identifier type:
+   - `npub1`/`nprofile1`: Profile section with placeholder for profile view
+   - `note1`: Note section with placeholder for kind:1 text note view
+   - `nevent1`: Event section with placeholder for any event type view
+   - `naddr1`: Addressable event section with placeholder for articles, marketplace items, etc.
+4. **Error Handling**: Invalid, vacant, or unsupported identifiers show 404 NotFound page
+5. **Ready for Population**: Each section includes comments indicating where AI agents should implement specific functionality
+
+**Example URLs that work automatically:**
+- `/npub1abc123...` - User profile (needs implementation)
+- `/note1def456...` - Kind:1 text note (needs implementation)
+- `/nevent1ghi789...` - Any event with relay hints (needs implementation)
+- `/naddr1jkl012...` - Addressable event (needs implementation)
+
+**Features included:**
+- Basic NIP-19 identifier decoding and routing
+- Type-specific sections for different identifier types
+- Error handling for invalid identifiers
+- Responsive container structure
+- Comments indicating where to implement specific views
+
+**Error handling:**
+- Invalid NIP-19 format → 404 NotFound
+- Unsupported identifier types (like `nsec1`) → 404 NotFound  
+- Empty or missing identifiers → 404 NotFound
+
 To implement NIP-19 routing in your Nostr application:
 
-1. **Create a NIP19Page Component**: This component should handle all NIP-19 identifier types and render appropriate views:
-
-```tsx
-// Example NIP19Page component structure
-function NIP19Page() {
-  const { nip19: nip19Param } = useParams<{ nip19: string }>();
-  
-  // Decode the NIP-19 identifier
-  const decoded = useMemo(() => {
-    try {
-      return nip19.decode(nip19Param);
-    } catch (error) {
-      return null; // Invalid identifier
-    }
-  }, [nip19Param]);
-
-  // Handle different identifier types
-  switch (decoded?.type) {
-    case 'npub':
-    case 'nprofile':
-      return <ProfileView pubkey={decoded.data} />;
-    case 'note':
-      return <NoteView eventId={decoded.data} />;
-    case 'nevent':
-      return <EventView eventId={decoded.data.id} />;
-    case 'naddr':
-      return <AddressableEventView naddr={decoded.data} />;
-    default:
-      return <NotFound />; // Handle invalid/unsupported identifiers
-  }
-}
-```
-
-2. **Add Root-Level Route**: Configure your router to handle NIP-19 identifiers at the root:
-
-```tsx
-// In your router configuration
-<Route path="/:nip19" element={<NIP19Page />} />
-```
-
-3. **Error Handling**: Always handle NIP-19 decoding errors gracefully:
-   - **Invalid identifiers**: Show 404 NotFound page
-   - **Vacant identifiers**: Show 404 NotFound page  
-   - **Unsupported types**: Show 404 NotFound page
-   - **Malformed identifiers**: Show 404 NotFound page
-
-4. **Identifier Validation**: Validate identifiers before processing:
-
-```tsx
-// Example validation
-const validateNIP19 = (identifier: string): boolean => {
-  if (!identifier) return false;
-  
-  const validPrefixes = ['npub1', 'nsec1', 'note1', 'nevent1', 'nprofile1', 'naddr1'];
-  const hasValidPrefix = validPrefixes.some(prefix => identifier.startsWith(prefix));
-  
-  if (!hasValidPrefix) return false;
-  
-  try {
-    nip19.decode(identifier);
-    return true;
-  } catch {
-    return false;
-  }
-};
-```
+1. **The NIP19Page boilerplate is already created** - populate sections with specific functionality
+2. **The route is already configured** in `AppRouter.tsx`
+3. **Error handling is built-in** - all edge cases show appropriate 404 responses
+4. **Add specific components** for profile views, event displays, etc. as needed
 
 #### Event Type Distinctions
 
