@@ -18,6 +18,7 @@ This project is a Nostr client application built with React 18.x, TailwindCSS 3.
 - `/src/components/`: UI components including NostrProvider for Nostr integration
   - `/src/components/ui/`: shadcn/ui components (48+ components available)
   - `/src/components/auth/`: Authentication-related components (LoginArea, LoginDialog, etc.)
+  - Zap components: `ZapButton`, `ZapDialog`, `WalletModal` for Lightning payments
 - `/src/hooks/`: Custom hooks including:
   - `useNostr`: Core Nostr protocol integration
   - `useAuthor`: Fetch user profile data by pubkey
@@ -31,9 +32,13 @@ This project is a Nostr client application built with React 18.x, TailwindCSS 3.
   - `useLoggedInAccounts`: Manage multiple accounts
   - `useLoginActions`: Authentication actions
   - `useIsMobile`: Responsive design helper
+  - `useZaps`: Lightning zap functionality with payment processing
+  - `useWallet`: Unified wallet detection (WebLN + NWC)
+  - `useNWC`: Nostr Wallet Connect connection management
+  - `useNWCContext`: Access NWC context provider
 - `/src/pages/`: Page components used by React Router (Index, NotFound)
 - `/src/lib/`: Utility functions and shared logic
-- `/src/contexts/`: React context providers (AppContext)
+- `/src/contexts/`: React context providers (AppContext, NWCContext)
 - `/src/test/`: Testing utilities including TestApp component
 - `/public/`: Static assets
 - `App.tsx`: Main app component with provider setup
@@ -669,9 +674,14 @@ import { NWCProvider } from '@/contexts/NWCContext';
 ```
 
 ```tsx
-// Use unified wallet detection
+// Use unified wallet detection and zap components
 const { webln, activeNWC, preferredMethod } = useWallet();
 const { zap } = useZaps(target, webln, activeNWC, onSuccess);
+
+// Pre-built components available
+import { ZapButton } from '@/components/ZapButton';
+import { ZapDialog } from '@/components/ZapDialog';
+import { WalletModal } from '@/components/WalletModal';
 
 // Validate recipient can receive zaps
 if (!author.metadata?.lud16 && !author.metadata?.lud06) {
