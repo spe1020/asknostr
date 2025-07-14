@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAppContext } from '@/hooks/useAppContext';
@@ -303,6 +303,10 @@ export function useZaps(
     }
   };
 
+  const resetInvoice = useCallback(() => {
+    setInvoice(null);
+  }, []);
+
   return {
     zaps,
     zapCount,
@@ -312,5 +316,6 @@ export function useZaps(
     isZapping,
     invoice,
     setInvoice,
+    resetInvoice,
   };
 }
