@@ -61,6 +61,8 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
+
+
   useEffect(() => {
     if (target) {
       setComment('Zapped with MKStack!');
@@ -86,7 +88,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
 
       try {
         const url = await QRCode.toDataURL(invoice.toUpperCase(), {
-          width: 256,
+          width: 512,
           margin: 2,
           color: {
             dark: '#000000',
@@ -154,86 +156,88 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const ZapContent = () => (
     <>
       {invoice ? (
-        <div className="space-y-4">
+        <div className="flex flex-col h-full min-h-0">
           {/* Payment amount display */}
           <div className="text-center">
             <div className="text-2xl font-bold">{amount} sats</div>
           </div>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* QR Code */}
-          <div className="flex justify-center">
-            <Card className="p-4 max-w-full">
-              <CardContent className="p-0 flex justify-center">
-                {qrCodeUrl ? (
-                  <img
-                    src={qrCodeUrl}
-                    alt="Lightning Invoice QR Code"
-                    className="w-56 h-56 max-w-full max-h-full object-contain"
-                  />
-                ) : (
-                  <div className="w-56 h-56 max-w-full bg-muted animate-pulse rounded" />
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <div className="flex flex-col justify-center min-h-0 flex-1">
+            {/* QR Code */}
+            <div className="flex justify-center px-2 sm:px-4">
+              <Card className="p-2 sm:p-4 w-full [@media(max-height:680px)]:max-w-[65vw] max-w-[95vw] sm:max-w-sm">
+                <CardContent className="p-0 flex justify-center">
+                  {qrCodeUrl ? (
+                    <img
+                      src={qrCodeUrl}
+                      alt="Lightning Invoice QR Code"
+                      className="w-full h-auto aspect-square max-w-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full aspect-square bg-muted animate-pulse rounded" />
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Invoice input */}
-          <div className="space-y-2">
-            <Label htmlFor="invoice">Lightning Invoice</Label>
-            <div className="flex gap-2 min-w-0">
-              <Input
-                id="invoice"
-                value={invoice}
-                readOnly
-                className="font-mono text-xs min-w-0 flex-1 overflow-hidden text-ellipsis"
-                onClick={(e) => e.currentTarget.select()}
-              />
+            {/* Invoice input */}
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="invoice">Lightning Invoice</Label>
+              <div className="flex gap-2 min-w-0">
+                <Input
+                  id="invoice"
+                  value={invoice}
+                  readOnly
+                  className="font-mono text-xs min-w-0 flex-1 overflow-hidden text-ellipsis"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopy}
+                  className="shrink-0"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Payment buttons */}
+            <div className="space-y-3 mt-4">
+              {hasWebLN && (
+                <Button
+                  onClick={() => {
+                    const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
+                    zap(finalAmount, comment);
+                  }}
+                  disabled={isZapping}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  {isZapping ? "Processing..." : "Pay with WebLN"}
+                </Button>
+              )}
+
               <Button
                 variant="outline"
-                size="icon"
-                onClick={handleCopy}
-                className="shrink-0"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Payment buttons */}
-          <div className="space-y-3">
-            {hasWebLN && (
-              <Button
-                onClick={() => {
-                  const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
-                  zap(finalAmount, comment);
-                }}
-                disabled={isZapping}
+                onClick={openInWallet}
                 className="w-full"
                 size="lg"
               >
-                <Zap className="h-4 w-4 mr-2" />
-                {isZapping ? "Processing..." : "Pay with WebLN"}
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in Lightning Wallet
               </Button>
-            )}
 
-            <Button
-              variant="outline"
-              onClick={openInWallet}
-              className="w-full"
-              size="lg"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open in Lightning Wallet
-            </Button>
-
-            <div className="text-[.65rem] text-muted-foreground text-center">
-              Scan the QR code or copy the invoice to pay with any Lightning wallet.
+              <div className="text-xs sm:text-[.65rem] text-muted-foreground text-center">
+                Scan the QR code or copy the invoice to pay with any Lightning wallet.
+              </div>
             </div>
           </div>
         </div>
@@ -306,137 +310,38 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   }
 
   if (isMobile) {
-    // Full screen payment view on mobile
-    if (invoice) {
-      return (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          {/* Header with back and close buttons */}
-          <div className="flex items-center justify-between p-4 pb-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setInvoice(null);
-                setQrCodeUrl('');
-              }}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-
-            <h1 className="text-lg font-semibold">Lightning Payment</h1>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setOpen(false)}
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4">
-              {/* Payment amount display */}
-              <div className="text-center">
-                <div className="text-3xl font-bold">{amount} sats</div>
-                <div className="text-sm text-muted-foreground">Lightning Network Payment</div>
-              </div>
-
-              <Separator />
-
-              {/* QR Code */}
-              <div className="flex justify-center">
-                <Card className="p-6 max-w-full">
-                  <CardContent className="p-0 flex justify-center">
-                    {qrCodeUrl ? (
-                      <img
-                        src={qrCodeUrl}
-                        alt="Lightning Invoice QR Code"
-                        className="w-72 h-72 max-w-full max-h-full object-contain"
-                      />
-                    ) : (
-                      <div className="w-72 h-72 max-w-full bg-muted animate-pulse rounded" />
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Invoice input */}
-              <div className="space-y-2">
-                <Label htmlFor="invoice">Lightning Invoice</Label>
-                <div className="flex gap-2 min-w-0">
-                  <Input
-                    id="invoice"
-                    value={invoice}
-                    readOnly
-                    className="font-mono text-xs min-w-0 flex-1 overflow-hidden text-ellipsis"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCopy}
-                    className="shrink-0"
-                  >
-                    {copied ? (
-                      <Check className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Payment buttons */}
-              <div className="space-y-3">
-                {hasWebLN && (
-                  <Button
-                    onClick={() => {
-                      const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
-                      zap(finalAmount, comment);
-                    }}
-                    disabled={isZapping}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    {isZapping ? "Processing..." : "Pay with WebLN"}
-                  </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={openInWallet}
-                  className="w-full"
-                  size="lg"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in Lightning Wallet
-                </Button>
-
-                <div className="text-xs text-muted-foreground text-center px-2">
-                  Scan the QR code or copy the invoice to pay with any Lightning wallet.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Drawer for amount selection on mobile
+    // Use drawer for entire mobile flow, make it full-screen when showing invoice
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        dismissible={true}
+      >
         <DrawerTrigger asChild>
           <div className={`cursor-pointer ${className || ''}`}>
             {children}
           </div>
         </DrawerTrigger>
-        <DrawerContent className="max-h-[95vh]" data-testid="zap-modal">
+        <DrawerContent
+          className={invoice ? "h-[100vh] rounded-none" : "max-h-[95vh]"}
+          data-testid="zap-modal"
+        >
           <DrawerHeader className="text-center relative">
+            {/* Back button when showing invoice */}
+            {invoice && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setInvoice(null);
+                  setQrCodeUrl('');
+                }}
+                className="absolute left-4 top-4 flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+
             {/* Close button */}
             <DrawerClose asChild>
               <Button
@@ -450,13 +355,17 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
             </DrawerClose>
 
             <DrawerTitle className="text-lg break-words pt-2">
-              Send a Zap
+              {invoice ? 'Lightning Payment' : 'Send a Zap'}
             </DrawerTitle>
             <DrawerDescription className="text-sm break-words text-center">
-              Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!
+              {invoice ? (
+                'Pay with Bitcoin Lightning Network'
+              ) : (
+                'Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!'
+              )}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="overflow-y-auto">
+          <div className={invoice ? "flex-1 overflow-y-auto px-2 pb-4" : "overflow-y-auto"}>
             <ZapContent />
           </div>
         </DrawerContent>
