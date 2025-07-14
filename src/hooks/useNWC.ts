@@ -25,24 +25,21 @@ export function useNWCInternal() {
   const [activeConnection, setActiveConnection] = useLocalStorage<string | null>('nwc-active-connection', null);
   const [connectionInfo, setConnectionInfo] = useState<Record<string, NWCInfo>>({});
 
-  // Parse and validate NWC URI
-  const parseNWCUri = (uri: string): { connectionString: string } | null => {
-    try {
-      if (!uri.startsWith('nostr+walletconnect://') && !uri.startsWith('nostrwalletconnect://')) {
-        console.error('Invalid NWC URI protocol:', { protocol: uri.split('://')[0] });
-        return null;
-      }
-
-      // Basic validation - let the SDK handle the detailed parsing
-      return { connectionString: uri };
-    } catch (error) {
-      console.error('Failed to parse NWC URI:', error);
-      return null;
-    }
-  };
-
   // Add new connection
   const addConnection = async (uri: string, alias?: string): Promise<boolean> => {
+    const parseNWCUri = (uri: string): { connectionString: string } | null => {
+      try {
+        if (!uri.startsWith('nostr+walletconnect://') && !uri.startsWith('nostrwalletconnect://')) {
+          console.error('Invalid NWC URI protocol:', { protocol: uri.split('://')[0] });
+          return null;
+        }
+        return { connectionString: uri };
+      } catch (error) {
+        console.error('Failed to parse NWC URI:', error);
+        return null;
+      }
+    };
+
     const parsed = parseNWCUri(uri);
     if (!parsed) {
       toast({
@@ -53,7 +50,6 @@ export function useNWCInternal() {
       return false;
     }
 
-    // Check if connection already exists
     const existingConnection = connections.find(c => c.connectionString === parsed.connectionString);
     if (existingConnection) {
       toast({
@@ -65,7 +61,6 @@ export function useNWCInternal() {
     }
 
     try {
-      // Test the connection by creating an LN client with timeout
       let timeoutId: NodeJS.Timeout | undefined;
       const testPromise = new Promise((resolve, reject) => {
         try {
@@ -93,19 +88,17 @@ export function useNWCInternal() {
         isConnected: true,
       };
 
-      // Store basic connection info
       setConnectionInfo(prev => ({
         ...prev,
         [parsed.connectionString]: {
           alias: connection.alias,
-          methods: ['pay_invoice'], // Assume basic payment capability
+          methods: ['pay_invoice'],
         },
       }));
 
       const newConnections = [...connections, connection];
       setConnections(newConnections);
 
-      // Set as active if it's the first connection or no active connection is set
       if (connections.length === 0 || !activeConnection)
         setActiveConnection(parsed.connectionString);
 
@@ -152,7 +145,6 @@ export function useNWCInternal() {
 
   // Get active connection
   const getActiveConnection = useCallback((): NWCConnection | null => {
-    // If no active connection is set but we have connections, set the first one as active
     if (!activeConnection && connections.length > 0) {
       setActiveConnection(connections[0].connectionString);
       return connections[0];
@@ -173,7 +165,6 @@ export function useNWCInternal() {
       throw new Error('Invalid connection: missing connection string');
     }
 
-    // Always create a fresh client for each payment to avoid stale connections
     let client: LN;
     try {
       client = new LN(connection.connectionString);
@@ -183,7 +174,6 @@ export function useNWCInternal() {
     }
 
     try {
-      // Add timeout to prevent hanging with proper cleanup
       let timeoutId: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('Payment timeout after 15 seconds')), 15000);
@@ -202,7 +192,6 @@ export function useNWCInternal() {
     } catch (error) {
       console.error('NWC payment failed:', error);
 
-      // Provide more specific error messages
       if (error instanceof Error) {
         if (error.message.includes('timeout')) {
           throw new Error('Payment timed out. Please try again.');
@@ -219,54 +208,6 @@ export function useNWCInternal() {
     }
   }, []);
 
-  // Get wallet info (simplified since SDK doesn't expose getInfo)
-  const getWalletInfo = useCallback(async (connection: NWCConnection): Promise<NWCInfo> => {
-    // Return stored info or basic fallback
-    const info = connectionInfo[connection.connectionString] || {
-      alias: connection.alias,
-      methods: ['pay_invoice'],
-    };
-    return info;
-  }, [connectionInfo]);
-
-  // Test NWC connection
-  const testNWCConnection = useCallback(async (connection: NWCConnection): Promise<boolean> => {
-    if (!connection.connectionString) {
-      console.error('NWC connection test failed: missing connection string');
-      return false;
-    }
-
-    try {
-      // Create a fresh client for testing
-      let timeoutId: NodeJS.Timeout | undefined;
-      const testPromise = new Promise((resolve, reject) => {
-        try {
-          const client = new LN(connection.connectionString);
-          resolve(client);
-        } catch (error) {
-          reject(error);
-        }
-      });
-
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('Connection test timeout')), 5000);
-      });
-
-      try {
-        await Promise.race([testPromise, timeoutPromise]);
-        if (timeoutId) clearTimeout(timeoutId);
-      } catch (error) {
-        if (timeoutId) clearTimeout(timeoutId);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('NWC connection test failed:', error);
-      return false;
-    }
-  }, []);
-
   return {
     connections,
     activeConnection,
@@ -276,8 +217,5 @@ export function useNWCInternal() {
     setActiveConnection,
     getActiveConnection,
     sendPayment,
-    getWalletInfo,
-    parseNWCUri,
-    testNWCConnection,
   };
 }
