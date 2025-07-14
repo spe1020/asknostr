@@ -262,23 +262,40 @@ export function useZaps(
                   variant: 'destructive',
                 });
               }
-            } else if (webln) {  // Try WebLN next
-              await webln.sendPayment(newInvoice);
+            }
+            
+            if (webln) {  // Try WebLN next
+              try {
+                await webln.sendPayment(newInvoice);
 
-              // Clear states immediately on success
-              setIsZapping(false);
-              setInvoice(null);
+                // Clear states immediately on success
+                setIsZapping(false);
+                setInvoice(null);
 
-              toast({
-                title: 'Zap successful!',
-                description: `You sent ${amount} sats to the author.`,
-              });
+                toast({
+                  title: 'Zap successful!',
+                  description: `You sent ${amount} sats to the author.`,
+                });
 
-              // Invalidate zap queries to refresh counts
-              queryClient.invalidateQueries({ queryKey: ['zaps'] });
+                // Invalidate zap queries to refresh counts
+                queryClient.invalidateQueries({ queryKey: ['zaps'] });
 
-              // Close dialog last to ensure clean state
-              onZapSuccess?.();
+                // Close dialog last to ensure clean state
+                onZapSuccess?.();
+              } catch (weblnError) {
+                console.error('webln payment failed, falling back:', weblnError);
+
+                // Show specific WebLN error to user for debugging
+                const errorMessage = weblnError instanceof Error ? weblnError.message : 'Unknown WebLN error';
+                toast({
+                  title: 'WebLN payment failed',
+                  description: `${errorMessage}. Falling back to other payment methods...`,
+                  variant: 'destructive',
+                });
+
+                setInvoice(newInvoice);
+                setIsZapping(false);
+              }
             } else { // Default - show QR code and manual Lightning URI
               setInvoice(newInvoice);
               setIsZapping(false);
