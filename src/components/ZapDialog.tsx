@@ -94,7 +94,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
         <div className="flex flex-col justify-center min-h-0 flex-1">
           {/* QR Code */}
           <div className="flex justify-center px-2 sm:px-4">
-            <Card className="p-2 sm:p-4 w-full [@media(max-height:680px)]:max-w-[65vw] max-w-[95vw] sm:max-w-sm">
+            <Card className="p-2 sm:p-4 [@media(max-height:680px)]:max-w-[65vw] max-w-[95vw] sm:max-w-sm mx-auto">
               <CardContent className="p-0 flex justify-center">
                 {qrCodeUrl ? (
                   <img
@@ -374,7 +374,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           </div>
         </DrawerTrigger>
         <DrawerContent
-          className={invoice ? "h-[100vh] rounded-none" : "max-h-[95vh]"}
+          className={invoice ? "h-full" : "max-h-[95vh]"}
           data-testid="zap-modal"
         >
           <DrawerHeader className="text-center relative">

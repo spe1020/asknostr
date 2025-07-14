@@ -269,7 +269,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
             </Button>
           )}
         </DrawerTrigger>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="h-full">
           <DrawerHeader className="text-center relative">
             {/* Close button */}
             <DrawerClose asChild>
