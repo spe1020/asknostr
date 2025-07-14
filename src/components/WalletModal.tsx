@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Wallet, Plus, Trash2, Zap, Globe, Settings, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,17 +46,6 @@ export function WalletModal({ children, className }: WalletModalProps) {
   const hasNWC = connections.length > 0 && connections.some(c => c.isConnected);
   const { toast } = useToast();
 
-  // Debug logging for wallet modal status
-  useEffect(() => {
-    console.debug('WalletModal status:', {
-      hasWebLN,
-      hasNWC,
-      connectionsCount: connections.length,
-      connectionsDetails: connections.map(c => ({ alias: c.alias, isConnected: c.isConnected })),
-      isDetecting
-    });
-  }, [hasWebLN, hasNWC, connections, isDetecting]);
-
   const handleAddConnection = async () => {
     if (!connectionUri.trim()) {
       toast({
@@ -67,30 +56,13 @@ export function WalletModal({ children, className }: WalletModalProps) {
       return;
     }
 
-    console.debug('WalletModal: Before adding connection', {
-      currentConnections: connections.length,
-      hasNWC
-    });
-
     setIsConnecting(true);
     try {
       const success = await addConnection(connectionUri.trim(), alias.trim() || undefined);
       if (success) {
-        console.debug('WalletModal: Connection added successfully', {
-          newConnections: connections.length,
-          hasNWC
-        });
         setConnectionUri('');
         setAlias('');
         setAddDialogOpen(false);
-
-        // Force a small delay to check state after React updates
-        setTimeout(() => {
-          console.debug('WalletModal: Post-add state check', {
-            connectionsLength: connections.length,
-            hasNWC
-          });
-        }, 100);
       }
     } finally {
       setIsConnecting(false);
@@ -98,20 +70,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
   };
 
   const handleRemoveConnection = (connectionString: string) => {
-    console.debug('WalletModal: Before removing connection', {
-      currentConnections: connections.length,
-      hasNWC
-    });
-
     removeConnection(connectionString);
-
-    // Force a small delay to check state after React updates
-    setTimeout(() => {
-      console.debug('WalletModal: Post-remove state check', {
-        connectionsLength: connections.length,
-        hasNWC
-      });
-    }, 100);
   };
 
   const handleSetActive = (connectionString: string) => {

@@ -12,32 +12,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent } from '@nostrify/nostrify';
 
-// NWC utility functions
-function parseNWCUri(uri: string): NWCConnection | null {
-  try {
-    const url = new URL(uri);
-    if (url.protocol !== 'nostr+walletconnect:') {
-      return null;
-    }
-
-    const walletPubkey = url.pathname.replace('//', '');
-    const secret = url.searchParams.get('secret');
-    const relayParam = url.searchParams.getAll('relay');
-
-    if (!walletPubkey || !secret || relayParam.length === 0) {
-      return null;
-    }
-
-    return {
-      connectionString: uri,
-      alias: 'Parsed NWC',
-      isConnected: false,
-    };
-  } catch {
-    return null;
-  }
-}
-
 export function useZaps(
   target: Event | Event[],
   webln: WebLNProvider | null,
@@ -327,6 +301,5 @@ export function useZaps(
     isZapping,
     invoice,
     setInvoice,
-    parseNWCUri,
   };
 }
