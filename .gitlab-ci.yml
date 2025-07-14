@@ -5,16 +5,13 @@ default:
   timeout: 1 minute
 
 stages:
-  - build
+  - test
   - deploy
 
-build:
-  stage: build
+test:
+  stage: test
   script:
-    - npm run build
-  only:
-    variables:
-      - $CI_DEFAULT_BRANCH != $CI_COMMIT_REF_NAME
+    - npm run test
 
 pages:
   stage: deploy
