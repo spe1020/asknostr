@@ -257,7 +257,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
               <Separator />
               <div className="text-center py-4 space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Install a WebLN extension (like Alby) or connect an NWC wallet for instant zaps.
+                  Install a WebLN extension or connect a NWC wallet for zaps.
                 </p>
               </div>
             </>
