@@ -66,6 +66,7 @@ export function useNWCInternal() {
 
     try {
       // Test the connection by creating an LN client with timeout
+      let timeoutId: NodeJS.Timeout | undefined;
       const testPromise = new Promise((resolve, reject) => {
         try {
           const client = new LN(parsed.connectionString);
@@ -74,10 +75,17 @@ export function useNWCInternal() {
           reject(error);
         }
       });
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timeout')), 10000);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Connection test timeout')), 10000);
       });
-      await Promise.race([testPromise, timeoutPromise]) as LN;
+
+      try {
+        await Promise.race([testPromise, timeoutPromise]) as LN;
+        if (timeoutId) clearTimeout(timeoutId);
+      } catch (error) {
+        if (timeoutId) clearTimeout(timeoutId);
+        throw error;
+      }
 
       const connection: NWCConnection = {
         connectionString: parsed.connectionString,
@@ -149,7 +157,7 @@ export function useNWCInternal() {
       setActiveConnection(connections[0].connectionString);
       return connections[0];
     }
-    
+
     if (!activeConnection) return null;
 
     const found = connections.find(c => c.connectionString === activeConnection);
@@ -175,14 +183,22 @@ export function useNWCInternal() {
     }
 
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Payment timeout after 15 seconds')), 15000);
+      // Add timeout to prevent hanging with proper cleanup
+      let timeoutId: NodeJS.Timeout | undefined;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Payment timeout after 15 seconds')), 15000);
       });
 
       const paymentPromise = client.pay(invoice);
-      const response = await Promise.race([paymentPromise, timeoutPromise]) as { preimage: string };
-      return response;
+
+      try {
+        const response = await Promise.race([paymentPromise, timeoutPromise]) as { preimage: string };
+        if (timeoutId) clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        if (timeoutId) clearTimeout(timeoutId);
+        throw error;
+      }
     } catch (error) {
       console.error('NWC payment failed:', error);
 
@@ -222,6 +238,7 @@ export function useNWCInternal() {
 
     try {
       // Create a fresh client for testing
+      let timeoutId: NodeJS.Timeout | undefined;
       const testPromise = new Promise((resolve, reject) => {
         try {
           const client = new LN(connection.connectionString);
@@ -231,10 +248,17 @@ export function useNWCInternal() {
         }
       });
 
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timeout')), 5000);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Connection test timeout')), 5000);
       });
-      await Promise.race([testPromise, timeoutPromise]);
+
+      try {
+        await Promise.race([testPromise, timeoutPromise]);
+        if (timeoutId) clearTimeout(timeoutId);
+      } catch (error) {
+        if (timeoutId) clearTimeout(timeoutId);
+        throw error;
+      }
 
       return true;
     } catch (error) {

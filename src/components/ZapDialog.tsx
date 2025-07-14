@@ -76,8 +76,13 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
 
   // Generate QR code
   useEffect(() => {
+    let isCancelled = false;
+
     const generateQR = async () => {
-      if (!invoice) return;
+      if (!invoice) {
+        setQrCodeUrl('');
+        return;
+      }
 
       try {
         const url = await QRCode.toDataURL(invoice.toUpperCase(), {
@@ -88,13 +93,22 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
             light: '#FFFFFF',
           },
         });
-        setQrCodeUrl(url);
+
+        if (!isCancelled) {
+          setQrCodeUrl(url);
+        }
       } catch (err) {
-        console.error('Failed to generate QR code:', err);
+        if (!isCancelled) {
+          console.error('Failed to generate QR code:', err);
+        }
       }
     };
 
     generateQR();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [invoice]);
 
   const handleCopy = async () => {
@@ -122,6 +136,12 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
       setInvoice(null);
       setCopied(false);
       setQrCodeUrl('');
+    } else {
+      // Clean up state when dialog closes
+      setAmount(100);
+      setInvoice(null);
+      setCopied(false);
+      setQrCodeUrl('');
     }
   }, [open, setInvoice]);
 
@@ -134,7 +154,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
   const ZapContent = () => (
     <>
       {invoice ? (
-        <div className="space-y-4 px-4 pb-4">
+        <div className="space-y-4">
           {/* Payment amount display */}
           <div className="text-center">
             <div className="text-2xl font-bold">{amount} sats</div>
@@ -212,7 +232,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
               Open in Lightning Wallet
             </Button>
 
-            <div className="text-[.65rem] text-muted-foreground text-center px-2">
+            <div className="text-[.65rem] text-muted-foreground text-center">
               Scan the QR code or copy the invoice to pay with any Lightning wallet.
             </div>
           </div>
@@ -432,9 +452,8 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
             <DrawerTitle className="text-lg break-words pt-2">
               Send a Zap
             </DrawerTitle>
-            <DrawerDescription className="text-sm break-words">
-              Zaps are small Bitcoin payments that support the creator of this item.
-              {' '}If you enjoyed this, consider sending a zap!
+            <DrawerDescription className="text-sm break-words text-center">
+              Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!
             </DrawerDescription>
           </DrawerHeader>
           <div className="overflow-y-auto">
@@ -457,13 +476,12 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           <DialogTitle className="text-lg break-words">
             {invoice ? 'Lightning Payment' : 'Send a Zap'}
           </DialogTitle>
-          <DialogDescription className="text-sm break-words">
+          <DialogDescription className="text-sm text-center break-words">
             {invoice ? (
               'Pay with Bitcoin Lightning Network'
             ) : (
               <>
-                Zaps are small Bitcoin payments that support the creator of this item.
-                {' '}If you enjoyed this, consider sending a zap!
+                Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!
               </>
             )}
           </DialogDescription>

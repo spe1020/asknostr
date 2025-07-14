@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAppContext } from '@/hooks/useAppContext';
@@ -32,10 +32,21 @@ export function useZaps(
   const [isZapping, setIsZapping] = useState(false);
   const [invoice, setInvoice] = useState<string | null>(null);
 
+  // Cleanup state when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsZapping(false);
+      setInvoice(null);
+    };
+  }, []);
+
   const { data: zapEvents, ...query } = useQuery<NostrEvent[], Error>({
     queryKey: ['zaps', actualTarget?.id],
     staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every minute to catch new zaps
+    refetchInterval: (query) => {
+      // Only refetch if the query is currently being observed (component is mounted)
+      return query.getObserversCount() > 0 ? 60000 : false;
+    },
     queryFn: async (c) => {
       if (!actualTarget) return [];
 
@@ -64,7 +75,7 @@ export function useZaps(
 
   // Process zap events into simple counts and totals
   const { zapCount, totalSats, zaps } = useMemo(() => {
-    if (!zapEvents || !actualTarget) {
+    if (!zapEvents || !Array.isArray(zapEvents) || !actualTarget) {
       return { zapCount: 0, totalSats: 0, zaps: [] };
     }
 
