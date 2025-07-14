@@ -24,7 +24,7 @@ export function ZapButton({
   const { webln, activeNWC } = useWallet();
 
   // Only fetch data if not provided externally
-  const { getZapData, isLoading } = useZaps(
+  const { totalSats: fetchedTotalSats, isLoading } = useZaps(
     externalZapData ? [] : target, // Empty array prevents fetching if external data provided
     webln,
     activeNWC
@@ -36,20 +36,18 @@ export function ZapButton({
   }
 
   // Use external data if provided, otherwise use fetched data
-  const zapInfo = externalZapData || getZapData(target.id);
-  const { count: zapCount, totalSats } = zapInfo;
-  const dataLoading = 'isLoading' in zapInfo ? zapInfo.isLoading : false;
-  const showLoading = externalZapData?.isLoading || dataLoading || isLoading;
+  const totalSats = externalZapData?.totalSats ?? fetchedTotalSats;
+  const showLoading = externalZapData?.isLoading || isLoading;
 
   return (
     <ZapDialog target={target}>
-      <div className={className}>
-        <Zap className="h-4 w-4 mr-1" />
+      <div className={`flex items-center gap-1 ${className}`}>
+        <Zap className="h-4 w-4" />
         <span className="text-xs">
           {showLoading ? (
             '...'
-          ) : showCount && zapCount > 0 ? (
-            totalSats > 0 ? `${totalSats.toLocaleString()}` : zapCount
+          ) : showCount && totalSats > 0 ? (
+            `${totalSats.toLocaleString()}`
           ) : (
             'Zap'
           )}

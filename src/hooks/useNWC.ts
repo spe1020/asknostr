@@ -28,15 +28,12 @@ export function useNWCInternal() {
   // Parse and validate NWC URI
   const parseNWCUri = (uri: string): { connectionString: string } | null => {
     try {
-      console.debug('Parsing NWC URI:', { uri: uri.substring(0, 50) + '...' });
-
       if (!uri.startsWith('nostr+walletconnect://') && !uri.startsWith('nostrwalletconnect://')) {
         console.error('Invalid NWC URI protocol:', { protocol: uri.split('://')[0] });
         return null;
       }
 
       // Basic validation - let the SDK handle the detailed parsing
-      console.debug('NWC URI parsing successful');
       return { connectionString: uri };
     } catch (error) {
       console.error('Failed to parse NWC URI:', error);
@@ -152,11 +149,8 @@ export function useNWCInternal() {
       setActiveConnection(connections[0].connectionString);
       return connections[0];
     }
-
-    if (!activeConnection) {
-      console.debug('No active connection and no connections');
-      return null;
-    }
+    
+    if (!activeConnection) return null;
 
     const found = connections.find(c => c.connectionString === activeConnection);
     return found || null;
@@ -183,7 +177,7 @@ export function useNWCInternal() {
     try {
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Payment timeout after 15 seconds')), 15);
+        setTimeout(() => reject(new Error('Payment timeout after 15 seconds')), 15000);
       });
 
       const paymentPromise = client.pay(invoice);

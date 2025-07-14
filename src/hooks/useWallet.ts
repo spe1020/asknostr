@@ -85,17 +85,6 @@ export function useWallet() {
     preferredMethod,
   };
 
-  // Debug logging for wallet status changes
-  useEffect(() => {
-    console.debug('Wallet status updated:', {
-      hasWebLN: status.hasWebLN,
-      hasNWC: status.hasNWC,
-      connectionsCount: connections.length,
-      activeNWC: !!status.activeNWC,
-      preferredMethod: status.preferredMethod
-    });
-  }, [status.hasWebLN, status.hasNWC, connections.length, status.activeNWC, status.preferredMethod]);
-
   return {
     ...status,
     hasAttemptedDetection,
