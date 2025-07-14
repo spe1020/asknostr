@@ -2,10 +2,10 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Shield, Upload, AlertTriangle, Sparkles, UserPlus, KeyRound, Lock } from 'lucide-react';
+import { Shield, Upload, AlertTriangle, UserPlus, KeyRound, Sparkles, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLoginActions } from '@/hooks/useLoginActions';
@@ -182,12 +182,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl")}
+        className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl overflow-y-scroll")}
       >
         <DialogHeader className={cn('px-6 pt-6 pb-1 relative')}>
-            <DialogTitle className={cn('font-semibold text-center')}>
-              Welcome!
-            </DialogTitle>
+
             <DialogDescription className="text-center">
               Sign up or log in to continue
             </DialogDescription>
@@ -197,22 +195,20 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
           <div className='relative p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800 overflow-hidden'>
             <div className='relative z-10 text-center space-y-3'>
               <div className='flex justify-center items-center gap-2 mb-2'>
-                <UserPlus className='w-5 h-5 text-blue-600' />
-                <span className='font-semibold text-blue-800 dark:text-blue-200'>
+                <Sparkles className='w-5 h-5 text-purple-600' />
+                <span className='font-semibold text-purple-800 dark:text-purple-200'>
                   New to Nostr?
                 </span>
               </div>
-
-              <p className='text-sm text-blue-700 dark:text-blue-300 mb-3'>
-                Create a new account to join the network.
+              <p className='text-sm text-purple-700/80 dark:text-purple-300/80'>
+                Create a new account to get started. It's free and open.
               </p>
-
               <Button
                 onClick={handleSignupClick}
-                className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
+                className='w-full rounded-full py-3 text-base font-semibold bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 transform transition-all duration-200 hover:scale-105 shadow-lg border-0'
               >
-                <Sparkles className='w-4 h-4 mr-2' />
-                <span>Create Account</span>
+                <UserPlus className='w-4 h-4 mr-2' />
+                <span>Sign Up</span>
               </Button>
             </div>
           </div>
@@ -241,7 +237,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                 <span>Key</span>
               </TabsTrigger>
               <TabsTrigger value="bunker" className="flex items-center gap-2">
-                <Lock className="w-4 h-4" />
+                <Cloud className="w-4 h-4" />
                 <span>Bunker</span>
               </TabsTrigger>
             </TabsList>
@@ -276,7 +272,6 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onLogin, onS
                     Secret Key (nsec)
                   </label>
                   <Input
-                    type='password'
                     id='nsec'
                     type="password"
                     value={nsec}

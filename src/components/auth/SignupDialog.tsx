@@ -99,7 +99,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
       toast({
         title: 'Secret Key Saved!',
-        description: 'Your key has been safely stored. Keep it safe!',
+        description: 'Your key has been safely stored.',
       });
     } catch {
       toast({
@@ -264,7 +264,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
     if (step === 'download') return (
       <span className="flex items-center justify-center gap-2">
         <Lock className="w-5 h-5 text-primary" />
-        Secure Your Secret Key
+        Secret Key
       </span>
     );
     if (step === 'profile') return (
@@ -284,7 +284,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
   const getDescription = () => {
     if (step === 'welcome') return 'Ready to join the Nostr network?';
     if (step === 'generate') return 'Creating your secret key to access Nostr.';
-    if (step === 'download') return 'This key is your password - keep it safe!';
+
     if (step === 'profile') return 'Tell others about yourself.';
     return 'Your account is ready!';
   };
@@ -320,11 +320,11 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
           <DialogTitle className={cn('font-semibold text-center text-lg')}>
             {getTitle()}
           </DialogTitle>
-          <DialogDescription className={cn('text-muted-foreground text-center')}>
+          <DialogDescription className={cn(`text-muted-foreground text-center ${step === 'download' && 'hidden'}`)}>
             {getDescription()}
           </DialogDescription>
         </DialogHeader>
-        <div className='px-6 pt-2 pb-4 space-y-4 overflow-y-auto flex-1'>
+        <div className='px-6 pt-2 pb-4 space-y-4 overflow-y-scroll flex-1'>
           {/* Welcome Step - New engaging introduction */}
           {step === 'welcome' && (
             <div className='text-center space-y-4'>
@@ -430,9 +430,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                         <p className='text-sm text-muted-foreground px-5'>
                           This key will be your password to access applications within the Nostr network.
                         </p>
-                        <p className='text-sm text-muted-foreground px-5'>
-                          It's completely unique and secure:<br></br>keep it secret, keep it safe!
-                        </p>
+
                       </div>
                     </div>
                   )}
@@ -499,106 +497,95 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
               </div>
 
               {/* Key vault */}
-              <div className='relative p-3 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl border-2 border-dashed border-blue-400 dark:border-blue-600 shadow-inner'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <Lock className='w-4 h-4 text-blue-600' />
-                  <span className='text-sm font-medium text-blue-800 dark:text-blue-200'>
-                    Your Secret Key
-                  </span>
-                </div>
-                <div className='p-2 bg-background/90 rounded-lg border border-blue-300 dark:border-blue-700'>
-                  <code className='text-xs break-all font-mono text-blue-900 dark:text-blue-100'>{nsec}</code>
-                </div>
-              </div>
+
 
               {/* Security options */}
               <div className='space-y-3'>
-                <div className='text-center'>
-                  <p className='text-sm font-medium text-muted-foreground mb-2'>
-                    Choose how to secure your key:
-                  </p>
-                </div>
+
 
                 <div className='grid grid-cols-1 gap-2'>
-                  {/* Copy Option */}
-                  <Card className={`cursor-pointer transition-all duration-200 ${
-                    keySecured === 'copied'
-                      ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
-                      : 'hover:bg-muted/50 dark:bg-muted'
-                  }`}>
-                    <CardContent className='p-3'>
-                      <Button
-                        variant="ghost"
-                        className='w-full h-auto p-0 justify-start'
-                        onClick={copyKey}
-                      >
-                        <div className='flex items-center gap-3 w-full'>
-                          <div className={`p-1.5 rounded-lg ${
-                            keySecured === 'copied'
-                              ? 'bg-green-100 dark:bg-green-900'
-                              : 'bg-muted'
-                          }`}>
-                            {keySecured === 'copied' ? (
-                              <CheckCircle className='w-4 h-4 text-green-600' />
-                            ) : (
-                              <Copy className='w-4 h-4 text-muted-foreground' />
-                            )}
-                          </div>
-                          <div className='flex-1 text-left'>
-                            <div className='font-medium text-sm'>
-                              Copy to Clipboard
-                            </div>
-                            <div className='text-xs text-muted-foreground'>
-                              Save to password manager
-                            </div>
-                          </div>
-                          {keySecured === 'copied' && (
-                            <div className='text-xs font-medium text-green-600'>
-                              ✓ Copied
-                            </div>
-                          )}
-                        </div>
-                      </Button>
-                    </CardContent>
-                  </Card>
-
                   {/* Download Option */}
-                  <Card className={`cursor-pointer transition-all duration-200 ${
+                   <Card className={`cursor-pointer transition-all duration-200 ${
                     keySecured === 'downloaded'
-                      ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
-                      : 'hover:bg-muted/50 dark:bg-muted'
-                  }`}>
+                       ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
+                       : 'hover:bg-primary/5 hover:border-primary/20'
+                   }`}>
                     <CardContent className='p-3'>
                       <Button
                         variant="ghost"
-                        className='w-full h-auto p-0 justify-start'
+                        className='w-full h-auto p-0 justify-start hover:bg-transparent'
                         onClick={downloadKey}
                       >
                         <div className='flex items-center gap-3 w-full'>
                           <div className={`p-1.5 rounded-lg ${
                             keySecured === 'downloaded'
-                              ? 'bg-green-100 dark:bg-green-900'
-                              : 'bg-muted'
-                          }`}>
+                               ? 'bg-green-100 dark:bg-green-900'
+                               : 'bg-primary/10'
+                           }`}>
                             {keySecured === 'downloaded' ? (
-                              <CheckCircle className='w-4 h-4 text-green-600' />
-                            ) : (
-                              <Download className='w-4 h-4 text-muted-foreground' />
-                            )}
+                               <CheckCircle className='w-4 h-4 text-green-600' />
+                             ) : (
+                               <Download className='w-4 h-4 text-primary' />
+                             )}
                           </div>
                           <div className='flex-1 text-left'>
-                            <div className='font-medium text-sm'>
-                              Download as File
-                            </div>
-                            <div className='text-xs text-muted-foreground'>
-                              Save as secret-key.txt file
-                            </div>
+                             <div className='font-medium text-sm'>
+                               Download as File
+                             </div>
+                             <div className='text-xs text-muted-foreground'>
+                               Save as secret-key.txt file
+                             </div>
                           </div>
                           {keySecured === 'downloaded' && (
-                            <div className='text-xs font-medium text-green-600'>
-                              ✓ Downloaded
+                             <div className='text-xs font-medium text-green-600'>
+                               ✓ Downloaded
+                             </div>
+                           )}
+                        </div>
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Copy Option */}
+                   <Card className={`cursor-pointer transition-all duration-200 ${
+                    keySecured === 'copied'
+                       ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
+                       : 'hover:bg-primary/5 hover:border-primary/20'
+                   }`}>
+                    <CardContent className='p-3'>
+                      <Button
+                        variant="ghost"
+                        className='w-full h-auto p-0 justify-start hover:bg-transparent'
+                        onClick={copyKey}
+                      >
+                        <div className='flex items-center gap-3 w-full'>
+                          <div className={`p-1.5 rounded-lg ${
+                            keySecured === 'copied'
+                               ? 'bg-green-100 dark:bg-green-900'
+                               : 'bg-primary/10'
+                           }`}>
+                            {keySecured === 'copied' ? (
+                               <CheckCircle className='w-4 h-4 text-green-600' />
+                             ) : (
+                               <Copy className='w-4 h-4 text-primary' />
+                             )}
+                          </div>
+                          <div className='flex-1 text-left'>
+                             <div className='font-medium text-sm'>
+                               Copy to Clipboard
+                             </div>
+                             <div className='text-xs text-muted-foreground'>
+                               Save to password manager
                             </div>
-                          )}
+                            <div className='text-[.7rem] text-muted-foreground'>
+                              {nsec.slice(0,16)}...
+                            </div>
+                          </div>
+                          {keySecured === 'copied' && (
+                             <div className='text-xs font-medium text-green-600'>
+                               ✓ Copied
+                             </div>
+                           )}
                         </div>
                       </Button>
                     </CardContent>
@@ -609,8 +596,8 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
                 <Button
                   className={`w-full rounded-full py-4 text-base font-semibold transform transition-all duration-200 shadow-lg ${
                     keySecured !== 'none'
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:scale-105'
-                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 hover:scale-105'
+                      : 'bg-gradient-to-r from-purple-600/60 to-yellow-600/60 text-foreground cursor-not-allowed'
                   }`}
                   onClick={finishKeySetup}
                   disabled={keySecured === 'none'}
