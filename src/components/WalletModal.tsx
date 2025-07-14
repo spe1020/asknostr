@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Wallet, Plus, Trash2, Zap, Globe, Settings, CheckCircle } from 'lucide-react';
+import { Wallet, Plus, Trash2, Zap, Globe, WalletMinimal, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -128,7 +128,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
               {/* NWC */}
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <WalletMinimal className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Nostr Wallet Connect</p>
                     <p className="text-xs text-muted-foreground">
@@ -215,7 +215,7 @@ export function WalletModal({ children, className }: WalletModalProps) {
                   return (
                     <div key={connection.connectionString} className={`flex items-center justify-between p-3 border rounded-lg ${isActive ? 'ring-2 ring-primary' : ''}`}>
                       <div className="flex items-center gap-3">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <WalletMinimal className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">
                             {connection.alias || info?.alias || 'Lightning Wallet'}

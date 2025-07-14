@@ -673,10 +673,24 @@ import { NWCProvider } from '@/contexts/NWCContext';
 </NostrProvider>
 ```
 
+#### useZaps Hook API
+
+**The `useZaps` hook accepts flexible input types - DO NOT create duplicate hooks:**
+
+```tsx
+// Single event
+const { zap, totalSats, isLoading } = useZaps(event, webln, activeNWC, onSuccess);
+
+// Multiple events (for bulk fetching zap data)
+const { zapData, isLoading } = useZaps(eventArray, webln, activeNWC);
+
+// Disable fetching
+const { zap } = useZaps([], webln, activeNWC, onSuccess);
+```
+
 ```tsx
 // Use unified wallet detection and zap components
 const { webln, activeNWC, preferredMethod } = useWallet();
-const { zap } = useZaps(target, webln, activeNWC, onSuccess);
 
 // Pre-built components available
 import { ZapButton } from '@/components/ZapButton';
@@ -691,10 +705,10 @@ if (!author.metadata?.lud16 && !author.metadata?.lud06) {
 
 **Critical patterns:**
 - **Include NWCProvider** in the provider tree before using any zap functionality
+- **Use existing `useZaps` hook** - it handles both single events and arrays
 - Detect WebLN only when needed (dialog open)
 - Show payment method indicator to users
 - Handle errors gracefully with specific messaging
-- Use `useZaps` hook for payment logic
 
 ## App Configuration
 
