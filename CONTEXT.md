@@ -496,17 +496,81 @@ The `LoginArea` component handles all the login-related UI and interactions, inc
 
 ### `npub`, `naddr`, and other Nostr addresses
 
-Nostr defines a set identifiers in NIP-19. Their prefixes:
+Nostr defines a set of bech32-encoded identifiers in NIP-19. Their prefixes and purposes:
 
-- `npub`: public keys
-- `nsec`: private keys
-- `note`: note ids
-- `nprofile`: a nostr profile
-- `nevent`: a nostr event
-- `naddr`: a nostr replaceable event coordinate
-- `nrelay`: a nostr relay (deprecated)
+- `npub1`: **public keys** - Just the 32-byte public key, no additional metadata
+- `nsec1`: **private keys** - Secret keys (should never be displayed publicly)  
+- `note1`: **event IDs** - Just the 32-byte event ID (hex), no additional metadata
+- `nevent1`: **event pointers** - Event ID plus optional relay hints and author pubkey
+- `nprofile1`: **profile pointers** - Public key plus optional relay hints and petname
+- `naddr1`: **addressable event coordinates** - For parameterized replaceable events (kind 30000-39999)
+- `nrelay1`: **relay references** - Relay URLs (deprecated)
 
-NIP-19 identifiers include a prefix, the number "1", then a base32-encoded data string.
+#### Key Differences Between Similar Identifiers
+
+**`note1` vs `nevent1`:**
+- `note1`: Contains only the event ID (32 bytes) - specifically for kind:1 events (Short Text Notes) as defined in NIP-10
+- `nevent1`: Contains event ID plus optional relay hints and author pubkey - for any event kind
+- Use `note1` for simple references to text notes and threads
+- Use `nevent1` when you need to include relay hints or author context for any event type
+
+**`npub1` vs `nprofile1`:**
+- `npub1`: Contains only the public key (32 bytes)
+- `nprofile1`: Contains public key plus optional relay hints and petname
+- Use `npub1` for simple user references
+- Use `nprofile1` when you need to include relay hints or display name context
+
+#### NIP-19 Routing Implementation
+
+**Critical**: NIP-19 identifiers should be handled at the **root level** of URLs (e.g., `/note1...`, `/npub1...`, `/naddr1...`), NOT nested under paths like `/note/note1...` or `/profile/npub1...`.
+
+This project includes a boilerplate `NIP19Page` component that provides the foundation for handling all NIP-19 identifier types at the root level. The component is configured in the routing system and ready for AI agents to populate with specific functionality.
+
+**How it works:**
+
+1. **Root-Level Route**: The route `/:nip19` in `AppRouter.tsx` catches all NIP-19 identifiers
+2. **Automatic Decoding**: The `NIP19Page` component automatically decodes the identifier using `nip19.decode()`
+3. **Type-Specific Sections**: Different sections are rendered based on the identifier type:
+   - `npub1`/`nprofile1`: Profile section with placeholder for profile view
+   - `note1`: Note section with placeholder for kind:1 text note view
+   - `nevent1`: Event section with placeholder for any event type view
+   - `naddr1`: Addressable event section with placeholder for articles, marketplace items, etc.
+4. **Error Handling**: Invalid, vacant, or unsupported identifiers show 404 NotFound page
+5. **Ready for Population**: Each section includes comments indicating where AI agents should implement specific functionality
+
+**Example URLs that work automatically:**
+- `/npub1abc123...` - User profile (needs implementation)
+- `/note1def456...` - Kind:1 text note (needs implementation)
+- `/nevent1ghi789...` - Any event with relay hints (needs implementation)
+- `/naddr1jkl012...` - Addressable event (needs implementation)
+
+**Features included:**
+- Basic NIP-19 identifier decoding and routing
+- Type-specific sections for different identifier types
+- Error handling for invalid identifiers
+- Responsive container structure
+- Comments indicating where to implement specific views
+
+**Error handling:**
+- Invalid NIP-19 format → 404 NotFound
+- Unsupported identifier types (like `nsec1`) → 404 NotFound  
+- Empty or missing identifiers → 404 NotFound
+
+To implement NIP-19 routing in your Nostr application:
+
+1. **The NIP19Page boilerplate is already created** - populate sections with specific functionality
+2. **The route is already configured** in `AppRouter.tsx`
+3. **Error handling is built-in** - all edge cases show appropriate 404 responses
+4. **Add specific components** for profile views, event displays, etc. as needed
+
+#### Event Type Distinctions
+
+**`note1` identifiers** are specifically for **kind:1 events** (Short Text Notes) as defined in NIP-10: "Text Notes and Threads". These are the basic social media posts in Nostr.
+
+**`nevent1` identifiers** can reference any event kind and include additional metadata like relay hints and author pubkey. Use `nevent1` when:
+- The event is not a kind:1 text note
+- You need to include relay hints for better discoverability
+- You want to include author context
 
 #### Use in Filters
 
@@ -548,22 +612,20 @@ const events = await nostr.query(
 );
 ```
 
-#### Use in URL Paths
+#### Implementation Guidelines
 
-For URL routing, use NIP-19 identifiers as path parameters (e.g., `/:nip19`) to create secure, universal links to Nostr events. Decode the identifier and render the appropriate component based on the type:
-
-- Regular events: Use `/nevent1...` paths
-- Replaceable/addressable events: Use `/naddr1...` paths
-
-Always use `naddr` identifiers for addressable events instead of just the `d` tag value, as `naddr` contains the author pubkey needed to create secure filters. This prevents security issues where malicious actors could publish events with the same `d` tag to override content.
-
-```ts
-// Secure routing with naddr
-const decoded = nip19.decode(params.nip19);
-if (decoded.type === 'naddr' && decoded.data.kind === 30024) {
-  // Render ArticlePage component
-}
-```
+1. **Always decode NIP-19 identifiers** before using them in queries
+2. **Use the appropriate identifier type** based on your needs:
+   - Use `note1` for kind:1 text notes specifically
+   - Use `nevent1` when including relay hints or for non-kind:1 events
+   - Use `naddr1` for addressable events (always includes author pubkey for security)
+3. **Handle different identifier types** appropriately:
+   - `npub1`/`nprofile1`: Display user profiles
+   - `note1`: Display kind:1 text notes specifically
+   - `nevent1`: Display any event with optional relay context
+   - `naddr1`: Display addressable events (articles, marketplace items, etc.)
+4. **Security considerations**: Always use `naddr1` for addressable events instead of just the `d` tag value, as `naddr1` contains the author pubkey needed to create secure filters
+5. **Error handling**: Gracefully handle invalid or unsupported NIP-19 identifiers with 404 responses
 
 ### Nostr Edit Profile
 
