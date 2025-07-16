@@ -51,7 +51,7 @@ The project uses shadcn/ui components located in `@/components/ui`. These are un
 - **Badge**: Small status descriptors for UI elements
 - **Breadcrumb**: Navigation aid showing current location in hierarchy
 - **Button**: Customizable button with multiple variants and sizes
-- **Calendar**: Date picker component 
+- **Calendar**: Date picker component
 - **Card**: Container with header, content, and footer sections
 - **Carousel**: Slideshow for cycling through elements
 - **Chart**: Data visualization component
@@ -174,7 +174,7 @@ When designing tags for Nostr events, follow these principles:
    ```json
    // ❌ Wrong: Multi-letter tag, not queryable at relay level
    ["product_type", "electronics"]
-   
+
    // ✅ Correct: Single-letter tag, relay-indexed and queryable
    ["t", "electronics"]
    ["t", "smartphone"]
@@ -186,7 +186,7 @@ When designing tags for Nostr events, follow these principles:
    // ❌ Inefficient: Get all events, filter in JavaScript
    const events = await nostr.query([{ kinds: [30402] }]);
    const filtered = events.filter(e => hasTag(e, 'product_type', 'electronics'));
-   
+
    // ✅ Efficient: Filter at relay level
    const events = await nostr.query([{ kinds: [30402], '#t': ['electronics'] }]);
    ```
@@ -202,17 +202,17 @@ For applications focused on a specific community or niche, you can use `t` tags 
 **Implementation:**
 ```typescript
 // Publishing with community tag
-createEvent({ 
-  kind: 1, 
+createEvent({
+  kind: 1,
   content: data.content,
   tags: [['t', 'farming']]
 });
 
 // Querying community content
-const events = await nostr.query([{ 
-  kinds: [1], 
+const events = await nostr.query([{
+  kinds: [1],
   '#t': ['farming'],
-  limit: 20 
+  limit: 20
 }], { signal });
 ```
 
@@ -382,7 +382,7 @@ function useCalendarEvents() {
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
       const events = await nostr.query([{ kinds: [31922, 31923], limit: 20 }], { signal });
-      
+
       // Filter events through validator to ensure they meet NIP-52 requirements
       return events.filter(validateCalendarEvent);
     },
@@ -490,9 +490,9 @@ function MyComponent() {
 }
 ```
 
-The `LoginArea` component handles all the login-related UI and interactions, including displaying login dialogs and switching between accounts. It should not be wrapped in any conditional logic.
+The `LoginArea` component handles all the login-related UI and interactions, including displaying login dialogs, sign up functionality, and switching between accounts. It should not be wrapped in any conditional logic.
 
-`LoginArea` displays a "Log in" button when the user is logged out, and changes to an account switcher once the user is logged in. It is an inline-flex element by default. To make it expand to the width of its container, you can pass a className like `flex` (to make it a block element) or `w-full`. If it is left as inline-flex, it's recommended to set a max width.
+`LoginArea` displays both "Log in" and "Sign Up" buttons when the user is logged out, and changes to an account switcher once the user is logged in. It is an inline-flex element by default. To make it expand to the width of its container, you can pass a className like `flex` (to make it a block element) or `w-full`. If it is left as inline-flex, it's recommended to set a max width.
 
 ### `npub`, `naddr`, and other Nostr addresses
 
@@ -807,14 +807,14 @@ import { Card, CardContent } from '@/components/ui/card';
 To add custom fonts, follow these steps:
 
 1. **Install a font package** using the `js-dev__npm_add_package` tool:
-   
+
    **Any Google Font can be installed** using the @fontsource packages. Examples:
    - For Inter Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/inter" })`
    - For Roboto: `js-dev__npm_add_package({ name: "@fontsource/roboto" })`
    - For Outfit Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/outfit" })`
    - For Poppins: `js-dev__npm_add_package({ name: "@fontsource/poppins" })`
    - For Open Sans: `js-dev__npm_add_package({ name: "@fontsource/open-sans" })`
-   
+
    **Format**: `@fontsource/[font-name]` or `@fontsource-variable/[font-name]` (for variable fonts)
 
 2. **Import the font** in `src/main.tsx`:
@@ -838,7 +838,7 @@ To add custom fonts, follow these steps:
 ### Recommended Font Choices by Use Case
 
 - **Modern/Clean**: Inter Variable, Outfit Variable, or Manrope
-- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro  
+- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro
 - **Creative/Artistic**: Poppins, Nunito, or Comfortaa
 - **Technical/Code**: JetBrains Mono, Fira Code, or Source Code Pro (for monospace)
 
