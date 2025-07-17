@@ -51,7 +51,7 @@ The project uses shadcn/ui components located in `@/components/ui`. These are un
 - **Badge**: Small status descriptors for UI elements
 - **Breadcrumb**: Navigation aid showing current location in hierarchy
 - **Button**: Customizable button with multiple variants and sizes
-- **Calendar**: Date picker component 
+- **Calendar**: Date picker component
 - **Card**: Container with header, content, and footer sections
 - **Carousel**: Slideshow for cycling through elements
 - **Chart**: Data visualization component
@@ -174,7 +174,7 @@ When designing tags for Nostr events, follow these principles:
    ```json
    // ❌ Wrong: Multi-letter tag, not queryable at relay level
    ["product_type", "electronics"]
-   
+
    // ✅ Correct: Single-letter tag, relay-indexed and queryable
    ["t", "electronics"]
    ["t", "smartphone"]
@@ -186,7 +186,7 @@ When designing tags for Nostr events, follow these principles:
    // ❌ Inefficient: Get all events, filter in JavaScript
    const events = await nostr.query([{ kinds: [30402] }]);
    const filtered = events.filter(e => hasTag(e, 'product_type', 'electronics'));
-   
+
    // ✅ Efficient: Filter at relay level
    const events = await nostr.query([{ kinds: [30402], '#t': ['electronics'] }]);
    ```
@@ -202,17 +202,17 @@ For applications focused on a specific community or niche, you can use `t` tags 
 **Implementation:**
 ```typescript
 // Publishing with community tag
-createEvent({ 
-  kind: 1, 
+createEvent({
+  kind: 1,
   content: data.content,
   tags: [['t', 'farming']]
 });
 
 // Querying community content
-const events = await nostr.query([{ 
-  kinds: [1], 
+const events = await nostr.query([{
+  kinds: [1],
   '#t': ['farming'],
-  limit: 20 
+  limit: 20
 }], { signal });
 ```
 
@@ -382,7 +382,7 @@ function useCalendarEvents() {
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(1500)]);
       const events = await nostr.query([{ kinds: [31922, 31923], limit: 20 }], { signal });
-      
+
       // Filter events through validator to ensure they meet NIP-52 requirements
       return events.filter(validateCalendarEvent);
     },
@@ -499,7 +499,7 @@ The `LoginArea` component handles all the login-related UI and interactions, inc
 Nostr defines a set of bech32-encoded identifiers in NIP-19. Their prefixes and purposes:
 
 - `npub1`: **public keys** - Just the 32-byte public key, no additional metadata
-- `nsec1`: **private keys** - Secret keys (should never be displayed publicly)  
+- `nsec1`: **private keys** - Secret keys (should never be displayed publicly)
 - `note1`: **event IDs** - Just the 32-byte event ID (hex), no additional metadata
 - `nevent1`: **event pointers** - Event ID plus optional relay hints and author pubkey
 - `nprofile1`: **profile pointers** - Public key plus optional relay hints and petname
@@ -553,7 +553,7 @@ This project includes a boilerplate `NIP19Page` component that provides the foun
 
 **Error handling:**
 - Invalid NIP-19 format → 404 NotFound
-- Unsupported identifier types (like `nsec1`) → 404 NotFound  
+- Unsupported identifier types (like `nsec1`) → 404 NotFound
 - Empty or missing identifiers → 404 NotFound
 
 To implement NIP-19 routing in your Nostr application:
@@ -869,14 +869,14 @@ import { Card, CardContent } from '@/components/ui/card';
 To add custom fonts, follow these steps:
 
 1. **Install a font package** using the `js-dev__npm_add_package` tool:
-   
+
    **Any Google Font can be installed** using the @fontsource packages. Examples:
    - For Inter Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/inter" })`
    - For Roboto: `js-dev__npm_add_package({ name: "@fontsource/roboto" })`
    - For Outfit Variable: `js-dev__npm_add_package({ name: "@fontsource-variable/outfit" })`
    - For Poppins: `js-dev__npm_add_package({ name: "@fontsource/poppins" })`
    - For Open Sans: `js-dev__npm_add_package({ name: "@fontsource/open-sans" })`
-   
+
    **Format**: `@fontsource/[font-name]` or `@fontsource-variable/[font-name]` (for variable fonts)
 
 2. **Import the font** in `src/main.tsx`:
@@ -900,7 +900,7 @@ To add custom fonts, follow these steps:
 ### Recommended Font Choices by Use Case
 
 - **Modern/Clean**: Inter Variable, Outfit Variable, or Manrope
-- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro  
+- **Professional/Corporate**: Roboto, Open Sans, or Source Sans Pro
 - **Creative/Artistic**: Poppins, Nunito, or Comfortaa
 - **Technical/Code**: JetBrains Mono, Fira Code, or Source Code Pro (for monospace)
 
@@ -928,8 +928,11 @@ When users specify color schemes:
 - Implement responsive design with Tailwind breakpoints
 - Add hover and focus states for interactive elements
 
-## Writing Tests
+## Writing Tests vs Running Tests
 
+There is an important distinction between **writing new tests** and **running existing tests**:
+
+### Writing Tests (Creating New Test Files)
 **Do not write tests** unless the user explicitly requests them in plain language. Writing unnecessary tests wastes significant time and money. Only create tests when:
 
 1. **The user explicitly asks for tests** to be written in their message
@@ -941,6 +944,14 @@ When users specify color schemes:
 - You think tests would be helpful
 - New features or components are created
 - Existing functionality needs verification
+
+### Running Tests (Executing the Test Suite)
+**ALWAYS run the test script** after making any code changes. This is mandatory regardless of whether you wrote new tests or not.
+
+- **You must run the test script** using `js-dev__run_script` tool with the "test" parameter
+- **Your task is not complete** until the test script passes without errors
+- **This applies to all changes** - bug fixes, new features, refactoring, or any code modifications
+- **The test script includes** TypeScript compilation, ESLint checks, and existing test validation
 
 ### Test Setup
 
@@ -973,6 +984,8 @@ describe('MyComponent', () => {
 
 ## Testing Your Changes
 
-Whenever you are finished modifying code, you must run the **test** script using the **js-dev__run_script** tool.
+**CRITICAL**: Whenever you are finished modifying code, you must run the **test** script using the **js-dev__run_script** tool.
 
 **Your task is not considered finished until this test passes without errors.**
+
+**This requirement applies regardless of whether you wrote new tests or not.** The test script validates the entire codebase, including TypeScript compilation, ESLint rules, and existing test suite.
