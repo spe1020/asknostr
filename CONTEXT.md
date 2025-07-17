@@ -499,7 +499,7 @@ The `LoginArea` component handles all the login-related UI and interactions, inc
 Nostr defines a set of bech32-encoded identifiers in NIP-19. Their prefixes and purposes:
 
 - `npub1`: **public keys** - Just the 32-byte public key, no additional metadata
-- `nsec1`: **private keys** - Secret keys (should never be displayed publicly)  
+- `nsec1`: **private keys** - Secret keys (should never be displayed publicly)
 - `note1`: **event IDs** - Just the 32-byte event ID (hex), no additional metadata
 - `nevent1`: **event pointers** - Event ID plus optional relay hints and author pubkey
 - `nprofile1`: **profile pointers** - Public key plus optional relay hints and petname
@@ -553,7 +553,7 @@ This project includes a boilerplate `NIP19Page` component that provides the foun
 
 **Error handling:**
 - Invalid NIP-19 format → 404 NotFound
-- Unsupported identifier types (like `nsec1`) → 404 NotFound  
+- Unsupported identifier types (like `nsec1`) → 404 NotFound
 - Empty or missing identifiers → 404 NotFound
 
 To implement NIP-19 routing in your Nostr application:
@@ -928,8 +928,11 @@ When users specify color schemes:
 - Implement responsive design with Tailwind breakpoints
 - Add hover and focus states for interactive elements
 
-## Writing Tests
+## Writing Tests vs Running Tests
 
+There is an important distinction between **writing new tests** and **running existing tests**:
+
+### Writing Tests (Creating New Test Files)
 **Do not write tests** unless the user explicitly requests them in plain language. Writing unnecessary tests wastes significant time and money. Only create tests when:
 
 1. **The user explicitly asks for tests** to be written in their message
@@ -941,6 +944,14 @@ When users specify color schemes:
 - You think tests would be helpful
 - New features or components are created
 - Existing functionality needs verification
+
+### Running Tests (Executing the Test Suite)
+**ALWAYS run the test script** after making any code changes. This is mandatory regardless of whether you wrote new tests or not.
+
+- **You must run the test script** using `js-dev__run_script` tool with the "test" parameter
+- **Your task is not complete** until the test script passes without errors
+- **This applies to all changes** - bug fixes, new features, refactoring, or any code modifications
+- **The test script includes** TypeScript compilation, ESLint checks, and existing test validation
 
 ### Test Setup
 
@@ -973,6 +984,8 @@ describe('MyComponent', () => {
 
 ## Testing Your Changes
 
-Whenever you are finished modifying code, you must run the **test** script using the **js-dev__run_script** tool.
+**CRITICAL**: Whenever you are finished modifying code, you must run the **test** script using the **js-dev__run_script** tool.
 
 **Your task is not considered finished until this test passes without errors.**
+
+**This requirement applies regardless of whether you wrote new tests or not.** The test script validates the entire codebase, including TypeScript compilation, ESLint rules, and existing test suite.
