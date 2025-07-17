@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
 import { Zap, Copy, Check, ExternalLink, Sparkle, Sparkles, Star, Rocket, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -85,16 +86,16 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
     {invoice ? (
       <div className="flex flex-col h-full min-h-0">
         {/* Payment amount display */}
-        <div className="text-center">
+        <div className="text-center pt-4">
           <div className="text-2xl font-bold">{amount} sats</div>
         </div>
 
         <Separator className="my-4" />
 
-        <div className="flex flex-col justify-center min-h-0 flex-1">
+        <div className="flex flex-col justify-center min-h-0 flex-1 px-2">
           {/* QR Code */}
-          <div className="flex justify-center px-2 sm:px-4">
-            <Card className="p-2 sm:p-4 [@media(max-height:680px)]:max-w-[65vw] max-w-[95vw] sm:max-w-sm mx-auto">
+          <div className="flex justify-center">
+            <Card className="p-3 [@media(max-height:680px)]:max-w-[65vw] max-w-[95vw] mx-auto">
               <CardContent className="p-0 flex justify-center">
                 {qrCodeUrl ? (
                   <img
@@ -170,7 +171,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
       </div>
     ) : (
       <>
-        <div className="grid gap-4 px-4 py-4 w-full overflow-hidden">
+        <div className="grid gap-3 px-4 py-4 w-full overflow-hidden">
           <ToggleGroup
             type="single"
             value={String(amount)}
@@ -179,15 +180,15 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
                 setAmount(parseInt(value, 10));
               }
             }}
-            className="grid grid-cols-5 gap-2 w-full"
+            className="grid grid-cols-5 gap-1 w-full"
           >
             {presetAmounts.map(({ amount: presetAmount, icon: Icon }) => (
               <ToggleGroupItem
                 key={presetAmount}
                 value={String(presetAmount)}
-                className="flex flex-col h-auto min-w-0 text-sm px-2 py-3"
+                className="flex flex-col h-auto min-w-0 text-xs px-1 py-2"
               >
-                <Icon className="h-5 w-5 mb-1" />
+                <Icon className="h-4 w-4 mb-1" />
                 <span className="truncate">{presetAmount}</span>
               </ToggleGroupItem>
             ))}
@@ -204,19 +205,19 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             placeholder="Custom amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full"
+            className="w-full text-sm"
           />
           <Textarea
             id="custom-comment"
-            placeholder="Custom comment"
+            placeholder="Add a comment (optional)"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full resize-none"
-            rows={3}
+            className="w-full resize-none text-sm"
+            rows={2}
           />
         </div>
         <div className="px-4 pb-4">
-          <Button onClick={handleZap} className="w-full" disabled={isZapping} size="lg">
+          <Button onClick={handleZap} className="w-full" disabled={isZapping} size="default">
             {isZapping ? (
               'Creating invoice...'
             ) : (
@@ -332,20 +333,6 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     }
   }, [open, setInvoice]);
 
-  // Force drawer to expand to full height when showing invoice on mobile
-  useEffect(() => {
-    if (isMobile && open && invoice) {
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        const drawerContent = document.querySelector('[data-testid="zap-modal"]') as HTMLElement;
-        if (drawerContent) {
-          drawerContent.style.height = '100%';
-          drawerContent.style.maxHeight = '95vh';
-        }
-      });
-    }
-  }, [isMobile, open, invoice]);
-
   const handleZap = () => {
     const finalAmount = typeof amount === 'string' ? parseInt(amount, 10) : amount;
     zap(finalAmount, comment);
@@ -377,8 +364,20 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     return (
       <Drawer
         open={open}
-        onOpenChange={setOpen}
-        dismissible={true}
+        onOpenChange={(newOpen) => {
+          // Reset invoice when closing
+          if (!newOpen) {
+            setInvoice(null);
+            setQrCodeUrl('');
+          }
+          setOpen(newOpen);
+        }}
+        dismissible={true} // Always allow dismissal via drag
+        snapPoints={invoice ? [0.5, 0.75, 0.98] : [0.98]}
+        activeSnapPoint={invoice ? 0.98 : 0.98}
+        modal={true}
+        shouldScaleBackground={false}
+        fadeFromIndex={0}
       >
         <DrawerTrigger asChild>
           <div className={`cursor-pointer ${className || ''}`}>
@@ -387,7 +386,10 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
         </DrawerTrigger>
         <DrawerContent
           key={invoice ? 'payment' : 'form'}
-          className={invoice ? "h-full max-h-screen" : "max-h-[95vh]"}
+          className={cn(
+            "transition-all duration-300",
+            invoice ? "h-full max-h-screen" : "max-h-[98vh]"
+          )}
           data-testid="zap-modal"
         >
           <DrawerHeader className="text-center relative">
@@ -429,7 +431,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
               )}
             </DrawerDescription>
           </DrawerHeader>
-          <div className={invoice ? "flex-1 overflow-y-auto px-2 pb-4 min-h-0" : "overflow-y-auto"}>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
             <ZapContent {...contentProps} />
           </div>
         </DrawerContent>
