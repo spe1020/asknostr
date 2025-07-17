@@ -11,17 +11,7 @@ interface ErrorBoundaryProps {
   fallback?: ReactNode;
 }
 
-interface ErrorMessage {
-  type: 'mkstack-error';
-  error: {
-    message: string;
-    stack?: string;
-    componentStack?: string;
-    url: string;
-    timestamp: string;
-    userAgent: string;
-  };
-}
+
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -42,26 +32,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error caught by ErrorBoundary:', error, errorInfo);
-
-    // Send error details via postMessage for iframe embedding
-    const errorMessage: ErrorMessage = {
-      type: 'mkstack-error',
-      error: {
-        message: error.message,
-        stack: error.stack || undefined,
-        componentStack: errorInfo.componentStack || undefined,
-        url: window.location.href,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-      },
-    };
-
-    // Send to parent window if in iframe, or broadcast to all
-    if (window.parent !== window) {
-      window.parent.postMessage(errorMessage, '*');
-    } else {
-      window.postMessage(errorMessage, '*');
-    }
 
     this.setState({
       error,

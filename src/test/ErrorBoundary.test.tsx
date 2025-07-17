@@ -2,11 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-// Mock window.postMessage
-const postMessageMock = vi.fn();
-Object.defineProperty(window, 'postMessage', {
-  value: postMessageMock,
-});
+
 
 // Test component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -43,33 +39,7 @@ describe('ErrorBoundary', () => {
     consoleSpy.mockRestore();
   });
 
-  it('sends error details via postMessage', () => {
-    // Suppress console.error for this test
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    postMessageMock.mockClear();
 
-    render(
-      <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
-    );
-
-    expect(postMessageMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'mkstack-error',
-        error: expect.objectContaining({
-          message: 'Test error',
-          stack: expect.any(String),
-          url: expect.any(String),
-          timestamp: expect.any(String),
-          userAgent: expect.any(String),
-        }),
-      }),
-      '*'
-    );
-
-    consoleSpy.mockRestore();
-  });
 
   it('uses custom fallback when provided', () => {
     const customFallback = <div>Custom error message</div>;
