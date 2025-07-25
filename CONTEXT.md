@@ -720,60 +720,6 @@ export function Post(/* ...props */) {
 }
 ```
 
-### Lightning Zaps (NIP-57)
-
-Implement zaps with a payment method fallback chain: **NWC → WebLN → Manual**. Always validate recipient lightning addresses (`lud16`/`lud06`) before creating zap requests.
-
-**⚠️ CRITICAL**: The `NWCProvider` must be included in the app's provider hierarchy for zap functionality to work. It should be placed inside `NostrProvider` but outside other UI providers:
-
-```tsx
-// In App.tsx and TestApp.tsx
-import { NWCProvider } from '@/contexts/NWCContext';
-
-<NostrProvider>
-  <NWCProvider>
-    {/* other providers and app content */}
-  </NWCProvider>
-</NostrProvider>
-```
-
-#### useZaps Hook API
-
-**The `useZaps` hook accepts flexible input types - DO NOT create duplicate hooks:**
-
-```tsx
-// Single event
-const { zap, totalSats, isLoading } = useZaps(event, webln, activeNWC, onSuccess);
-
-// Multiple events (for bulk fetching zap data)
-const { zapData, isLoading } = useZaps(eventArray, webln, activeNWC);
-
-// Disable fetching
-const { zap } = useZaps([], webln, activeNWC, onSuccess);
-```
-
-```tsx
-// Use unified wallet detection and zap components
-const { webln, activeNWC, preferredMethod } = useWallet();
-
-// Pre-built components available
-import { ZapButton } from '@/components/ZapButton';
-import { ZapDialog } from '@/components/ZapDialog';
-import { WalletModal } from '@/components/WalletModal';
-
-// Validate recipient can receive zaps
-if (!author.metadata?.lud16 && !author.metadata?.lud06) {
-  return null; // Hide zap button
-}
-```
-
-**Critical patterns:**
-- **Include NWCProvider** in the provider tree before using any zap functionality
-- **Use existing `useZaps` hook** - it handles both single events and arrays
-- **Avoid duplicate zap displays** - ZapButton already includes count display, don't add separate badges
-- Detect WebLN only when needed (dialog open)
-- Show payment method indicator to users
-- Handle errors gracefully with specific messaging
 ### Adding Comments Sections
 
 The project includes a complete commenting system using NIP-22 (kind 1111) comments that can be added to any Nostr event or URL. The `CommentsSection` component provides a full-featured commenting interface with threaded replies, user authentication, and real-time updates.
