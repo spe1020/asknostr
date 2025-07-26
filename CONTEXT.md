@@ -18,6 +18,7 @@ This project is a Nostr client application built with React 18.x, TailwindCSS 3.
 - `/src/components/`: UI components including NostrProvider for Nostr integration
   - `/src/components/ui/`: shadcn/ui components (48+ components available)
   - `/src/components/auth/`: Authentication-related components (LoginArea, LoginDialog, etc.)
+  - Zap components: `ZapButton`, `ZapDialog`, `WalletModal` for Lightning payments
 - `/src/hooks/`: Custom hooks including:
   - `useNostr`: Core Nostr protocol integration
   - `useAuthor`: Fetch user profile data by pubkey
@@ -31,9 +32,13 @@ This project is a Nostr client application built with React 18.x, TailwindCSS 3.
   - `useLoggedInAccounts`: Manage multiple accounts
   - `useLoginActions`: Authentication actions
   - `useIsMobile`: Responsive design helper
+  - `useZaps`: Lightning zap functionality with payment processing
+  - `useWallet`: Unified wallet detection (WebLN + NWC)
+  - `useNWC`: Nostr Wallet Connect connection management
+  - `useNWCContext`: Access NWC context provider
 - `/src/pages/`: Page components used by React Router (Index, NotFound)
 - `/src/lib/`: Utility functions and shared logic
-- `/src/contexts/`: React context providers (AppContext)
+- `/src/contexts/`: React context providers (AppContext, NWCContext)
 - `/src/test/`: Testing utilities including TestApp component
 - `/public/`: Static assets
 - `App.tsx`: Main app component with provider setup
@@ -493,6 +498,8 @@ function MyComponent() {
 The `LoginArea` component handles all the login-related UI and interactions, including displaying login dialogs, sign up functionality, and switching between accounts. It should not be wrapped in any conditional logic.
 
 `LoginArea` displays both "Log in" and "Sign Up" buttons when the user is logged out, and changes to an account switcher once the user is logged in. It is an inline-flex element by default. To make it expand to the width of its container, you can pass a className like `flex` (to make it a block element) or `w-full`. If it is left as inline-flex, it's recommended to set a max width.
+
+**Important**: Social applications should include a profile menu button in the main interface (typically in headers/navigation) to provide access to account settings, profile editing, and logout functionality. Don't only show `LoginArea` in logged-out states.
 
 ### `npub`, `naddr`, and other Nostr addresses
 
