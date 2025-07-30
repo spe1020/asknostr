@@ -11,7 +11,6 @@ node_modules
 dist
 dist-ssr
 *.local
-.ai-history/
 
 # Editor directories and files
 .idea
