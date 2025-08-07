@@ -1,0 +1,16 @@
+{
+  "name": "AskNostr",
+  "short_name": "AskNostr",
+  "description": "A minimalist Nostr web client focused on the #asknostr tag. Ask questions, share knowledge, and connect with the Nostr community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
