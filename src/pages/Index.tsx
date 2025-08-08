@@ -45,7 +45,7 @@ const Index = () => {
               )}
             </div>
 
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-8">
               <RelaySelector />
               <LoginArea className="max-w-40" />
             </div>

@@ -1,6 +1,7 @@
-import { Check, Wifi, Plus } from "lucide-react";
+import { Check, Wifi, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -26,15 +27,13 @@ export function RelaySelector(props: RelaySelectorProps) {
   const { className } = props;
   const { config, updateConfig, presetRelays = [] } = useAppContext();
   
-  const selectedRelay = config.relayUrl;
-  const setSelectedRelay = (relay: string) => {
-    updateConfig((current) => ({ ...current, relayUrl: relay }));
+  const selectedRelays = config.relayUrls;
+  const setSelectedRelays = (relays: string[]) => {
+    updateConfig((current) => ({ ...current, relayUrls: relays }));
   };
 
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
-
-  const selectedOption = presetRelays.find((option) => option.url === selectedRelay);
 
   // Function to normalize relay URL by adding wss:// if no protocol is present
   const normalizeRelayUrl = (url: string): string => {
@@ -52,9 +51,27 @@ export function RelaySelector(props: RelaySelectorProps) {
 
   // Handle adding a custom relay
   const handleAddCustomRelay = (url: string) => {
-    setSelectedRelay?.(normalizeRelayUrl(url));
+    const normalizedUrl = normalizeRelayUrl(url);
+    if (!selectedRelays.includes(normalizedUrl)) {
+      setSelectedRelays([...selectedRelays, normalizedUrl]);
+    }
     setOpen(false);
     setInputValue("");
+  };
+
+  // Handle removing a relay
+  const handleRemoveRelay = (url: string) => {
+    setSelectedRelays(selectedRelays.filter(relay => relay !== url));
+  };
+
+  // Handle toggling a relay
+  const handleToggleRelay = (url: string) => {
+    const normalizedUrl = normalizeRelayUrl(url);
+    if (selectedRelays.includes(normalizedUrl)) {
+      handleRemoveRelay(normalizedUrl);
+    } else {
+      handleAddCustomRelay(normalizedUrl);
+    }
   };
 
   // Check if input value looks like a valid relay URL
@@ -72,6 +89,12 @@ export function RelaySelector(props: RelaySelectorProps) {
     }
   };
 
+  // Get display name for a relay URL
+  const getRelayDisplayName = (url: string) => {
+    const preset = presetRelays.find(r => r.url === url);
+    return preset ? preset.name : url.replace(/^wss?:\/\//, '');
+  };
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -81,18 +104,48 @@ export function RelaySelector(props: RelaySelectorProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn("h-8 w-8", className)}
+                className={cn("h-8 w-8 relative mr-2", className)}
               >
                 <Wifi className="h-4 w-4" />
+                {selectedRelays.length > 1 && (
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs">
+                    {selectedRelays.length}
+                  </Badge>
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="end">
+            <PopoverContent className="w-[350px] p-0" align="end">
               <div className="p-3 border-b">
                 <h3 className="font-semibold text-sm">Relay Settings</h3>
                 <p className="text-xs text-muted-foreground">
-                  Current: {selectedOption?.name || selectedRelay?.replace(/^wss?:\/\//, '') || 'None'}
+                  {selectedRelays.length} relay{selectedRelays.length !== 1 ? 's' : ''} selected
                 </p>
               </div>
+
+              {/* Selected Relays */}
+              {selectedRelays.length > 0 && (
+                <div className="p-3 border-b">
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">Active Relays</h4>
+                  <div className="space-y-1">
+                    {selectedRelays.map((relay) => (
+                      <div key={relay} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-xs truncate flex-1">
+                          {getRelayDisplayName(relay)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveRelay(relay)}
+                          className="h-6 w-6 p-0 ml-2"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <Command>
                 <CommandInput 
                   placeholder="Search relays or type URL..." 
@@ -131,16 +184,12 @@ export function RelaySelector(props: RelaySelectorProps) {
                         <CommandItem
                           key={option.url}
                           value={option.url}
-                          onSelect={(currentValue) => {
-                            setSelectedRelay(normalizeRelayUrl(currentValue));
-                            setOpen(false);
-                            setInputValue("");
-                          }}
+                          onSelect={() => handleToggleRelay(option.url)}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              selectedRelay === option.url ? "opacity-100" : "opacity-0"
+                              selectedRelays.includes(option.url) ? "opacity-100" : "opacity-0"
                             )}
                           />
                           <div className="flex flex-col">
@@ -170,7 +219,7 @@ export function RelaySelector(props: RelaySelectorProps) {
           </Popover>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Relay Settings</p>
+          <p>Relay Settings ({selectedRelays.length} active)</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
