@@ -8,13 +8,14 @@ import { RelaySelector } from '@/components/RelaySelector';
 import { NostrTutorial } from '@/components/NostrTutorial';
 import { InfoRibbon } from '@/components/InfoRibbon';
 import { useTutorial } from '@/hooks/useTutorial';
+import { HomepagePrompt } from '@/components/HomepagePrompt';
 
 const Index = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<NostrEvent | null>(null);
   const { showTutorial, closeTutorial, openTutorial } = useTutorial();
 
   useSeoMeta({
-    title: 'AskNostr - Decentralized Q&A on Nostr',
+    title: 'AskNostr - Q&A Powered by Nostr',
     description: 'A minimalist Nostr web client focused on the #asknostr tag. Ask questions, share knowledge, and connect with the Nostr community.',
   });
 
@@ -39,13 +40,13 @@ const Index = () => {
               <h1 className="text-xl font-bold">AskNostr</h1>
               {!selectedQuestion && (
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  Decentralized Q&A on Nostr
+                  Q&A Powered by Nostr
                 </p>
               )}
             </div>
 
-            <div className="flex items-center space-x-4">
-              <RelaySelector className="max-w-48" />
+            <div className="flex items-center space-x-6">
+              <RelaySelector />
               <LoginArea className="max-w-40" />
             </div>
           </div>
@@ -60,7 +61,13 @@ const Index = () => {
             onBack={handleBackToFeed}
           />
         ) : (
-          <QuestionsFeed onQuestionClick={handleQuestionClick} />
+          <>
+            {/* Prominent Question Prompt */}
+            <HomepagePrompt />
+            
+            {/* Questions Feed */}
+            <QuestionsFeed onQuestionClick={handleQuestionClick} />
+          </>
         )}
       </main>
 

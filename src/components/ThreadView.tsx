@@ -1,9 +1,10 @@
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RotateCcw, MessageCircle } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { useThreadReplies, type ReplySortOption } from '@/hooks/useThreadReplies';
 import { QuestionCard } from '@/components/QuestionCard';
 import { ReplyCard } from '@/components/ReplyCard';
@@ -33,7 +34,7 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} className="gap-2">
@@ -51,28 +52,45 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="chronological">Chronological</SelectItem>
-              <SelectItem value="zap-ranked">Zap Ranked</SelectItem>
+              <SelectItem value="chronological">Oldest First</SelectItem>
+              <SelectItem value="zap-ranked">Most Zapped</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Root Question */}
-      <QuestionCard
-        event={rootEvent}
-        showFullContent={true}
-      />
+      {/* Root Question Section */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-primary rounded-full"></div>
+          <h2 className="text-lg font-semibold">Question</h2>
+        </div>
+        <QuestionCard
+          event={rootEvent}
+          showFullContent={true}
+        />
+      </div>
 
       {/* Reply Form */}
-      <ReplyForm rootEvent={rootEvent} onSuccess={handleReplySuccess} />
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium text-muted-foreground">Add Your Answer</h3>
+        </div>
+        <ReplyForm rootEvent={rootEvent} onSuccess={handleReplySuccess} />
+      </div>
 
       {/* Replies Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">
-            Replies {replies && `(${replies.length})`}
-          </h3>
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-semibold">Answers</h3>
+            {replies && replies.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                ({replies.length} {replies.length === 1 ? 'answer' : 'answers'})
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -104,7 +122,7 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
             <CardContent className="py-12 px-8 text-center">
               <div className="max-w-sm mx-auto space-y-4">
                 <p className="text-muted-foreground">
-                  Failed to load replies. Try another relay?
+                  Failed to load answers. Try another relay?
                 </p>
                 <RelaySelector className="w-full" />
               </div>
@@ -118,7 +136,7 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
             <CardContent className="py-12 px-8 text-center">
               <div className="max-w-sm mx-auto space-y-4">
                 <p className="text-muted-foreground">
-                  No replies yet. Be the first to answer!
+                  No answers yet. Be the first to answer this question!
                 </p>
               </div>
             </CardContent>
@@ -128,8 +146,13 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
         {/* Replies List */}
         {replies && replies.length > 0 && (
           <div className="space-y-4">
-            {replies.map((reply) => (
-              <ReplyCard key={reply.id} event={reply} />
+            {replies.map((reply, index) => (
+              <div key={reply.id}>
+                <ReplyCard event={reply} />
+                {index < replies.length - 1 && (
+                  <Separator className="my-4 ml-4" />
+                )}
+              </div>
             ))}
           </div>
         )}

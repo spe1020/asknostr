@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Wifi, Plus } from "lucide-react";
+import { Check, Wifi, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { useAppContext } from "@/hooks/useAppContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RelaySelectorProps {
   className?: string;
@@ -72,103 +73,106 @@ export function RelaySelector(props: RelaySelectorProps) {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("justify-between", className)}
-        >
-          <div className="flex items-center gap-2">
-            <Wifi className="h-4 w-4" />
-            <span className="truncate">
-              {selectedOption 
-                ? selectedOption.name 
-                : selectedRelay 
-                  ? selectedRelay.replace(/^wss?:\/\//, '')
-                  : "Select relay..."
-              }
-            </span>
-          </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
-        <Command>
-          <CommandInput 
-            placeholder="Search relays or type URL..." 
-            value={inputValue}
-            onValueChange={setInputValue}
-          />
-          <CommandList>
-            <CommandEmpty>
-              {inputValue && isValidRelayInput(inputValue) ? (
-                <CommandItem
-                  onSelect={() => handleAddCustomRelay(inputValue)}
-                  className="cursor-pointer"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Add custom relay</span>
-                    <span className="text-xs text-muted-foreground">
-                      {normalizeRelayUrl(inputValue)}
-                    </span>
-                  </div>
-                </CommandItem>
-              ) : (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  {inputValue ? "Invalid relay URL" : "No relay found."}
-                </div>
-              )}
-            </CommandEmpty>
-            <CommandGroup>
-              {presetRelays
-                .filter((option) => 
-                  !inputValue || 
-                  option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-                  option.url.toLowerCase().includes(inputValue.toLowerCase())
-                )
-                .map((option) => (
-                  <CommandItem
-                    key={option.url}
-                    value={option.url}
-                    onSelect={(currentValue) => {
-                      setSelectedRelay(normalizeRelayUrl(currentValue));
-                      setOpen(false);
-                      setInputValue("");
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedRelay === option.url ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium">{option.name}</span>
-                      <span className="text-xs text-muted-foreground">{option.url}</span>
-                    </div>
-                  </CommandItem>
-                ))}
-              {inputValue && isValidRelayInput(inputValue) && (
-                <CommandItem
-                  onSelect={() => handleAddCustomRelay(inputValue)}
-                  className="cursor-pointer border-t"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Add custom relay</span>
-                    <span className="text-xs text-muted-foreground">
-                      {normalizeRelayUrl(inputValue)}
-                    </span>
-                  </div>
-                </CommandItem>
-              )}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("h-8 w-8", className)}
+              >
+                <Wifi className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0" align="end">
+              <div className="p-3 border-b">
+                <h3 className="font-semibold text-sm">Relay Settings</h3>
+                <p className="text-xs text-muted-foreground">
+                  Current: {selectedOption?.name || selectedRelay?.replace(/^wss?:\/\//, '') || 'None'}
+                </p>
+              </div>
+              <Command>
+                <CommandInput 
+                  placeholder="Search relays or type URL..." 
+                  value={inputValue}
+                  onValueChange={setInputValue}
+                />
+                <CommandList>
+                  <CommandEmpty>
+                    {inputValue && isValidRelayInput(inputValue) ? (
+                      <CommandItem
+                        onSelect={() => handleAddCustomRelay(inputValue)}
+                        className="cursor-pointer"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        <div className="flex flex-col">
+                          <span className="font-medium">Add custom relay</span>
+                          <span className="text-xs text-muted-foreground">
+                            {normalizeRelayUrl(inputValue)}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    ) : (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        {inputValue ? "Invalid relay URL" : "No relay found."}
+                      </div>
+                    )}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {presetRelays
+                      .filter((option) => 
+                        !inputValue || 
+                        option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+                        option.url.toLowerCase().includes(inputValue.toLowerCase())
+                      )
+                      .map((option) => (
+                        <CommandItem
+                          key={option.url}
+                          value={option.url}
+                          onSelect={(currentValue) => {
+                            setSelectedRelay(normalizeRelayUrl(currentValue));
+                            setOpen(false);
+                            setInputValue("");
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedRelay === option.url ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{option.name}</span>
+                            <span className="text-xs text-muted-foreground">{option.url}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    {inputValue && isValidRelayInput(inputValue) && (
+                      <CommandItem
+                        onSelect={() => handleAddCustomRelay(inputValue)}
+                        className="cursor-pointer border-t"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        <div className="flex flex-col">
+                          <span className="font-medium">Add custom relay</span>
+                          <span className="text-xs text-muted-foreground">
+                            {normalizeRelayUrl(inputValue)}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    )}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Relay Settings</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

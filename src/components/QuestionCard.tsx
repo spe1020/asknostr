@@ -1,5 +1,5 @@
-import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Zap } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { MessageCircle, Zap, Clock } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { useEventCounts } from '@/hooks/useEventCounts';
 import { genUserName } from '@/lib/genUserName';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NoteContent } from '@/components/NoteContent';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface QuestionCardProps {
   event: NostrEvent;
@@ -28,8 +29,10 @@ export function QuestionCard({
   const displayName = metadata?.name ?? genUserName(event.pubkey);
   const nip05 = metadata?.nip05;
   const profileImage = metadata?.picture;
+  const about = metadata?.about;
 
   const timeAgo = formatDistanceToNow(new Date(event.created_at * 1000), { addSuffix: true });
+  const exactTime = format(new Date(event.created_at * 1000), 'MMM d, yyyy \'at\' h:mm a');
 
   // Truncate content for preview (first 280 characters)
   const truncatedContent = showFullContent
@@ -40,29 +43,47 @@ export function QuestionCard({
 
   return (
     <Card
-      className={`transition-colors ${onClick ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+      className={`transition-all duration-200 ${
+        onClick 
+          ? 'cursor-pointer hover:shadow-md hover:border-primary/30' 
+          : 'shadow-sm'
+      }`}
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src={profileImage} alt={displayName} />
               <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="font-semibold text-sm">{displayName}</span>
+                <span className="font-semibold text-sm truncate">{displayName}</span>
                 {nip05 && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">
                     {nip05}
                   </Badge>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground">{timeAgo}</span>
+              <div className="flex items-center space-x-1">
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xs text-muted-foreground cursor-help">
+                        {timeAgo}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{exactTime}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs flex-shrink-0">
             #asknostr
           </Badge>
         </div>
@@ -77,16 +98,22 @@ export function QuestionCard({
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t">
+          {about && showFullContent && (
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
+              <span className="font-medium">About {displayName}:</span> {about}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-3 border-t">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="h-8 px-2">
-                <MessageCircle className="h-4 w-4 mr-1" />
-                <span className="text-xs">{replyCount}</span>
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                <span className="text-xs font-medium">{replyCount} {replyCount === 1 ? 'answer' : 'answers'}</span>
               </Button>
 
-              <Button variant="ghost" size="sm" className="h-8 px-2">
-                <Zap className="h-4 w-4 mr-1" />
-                <span className="text-xs">{zapCount}</span>
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                <Zap className="h-4 w-4 mr-2" />
+                <span className="text-xs font-medium">{zapCount} zaps</span>
               </Button>
             </div>
 

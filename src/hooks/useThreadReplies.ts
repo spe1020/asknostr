@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-
+import { countHashtags } from '@/lib/utils';
 
 export type ReplySortOption = 'chronological' | 'zap-ranked';
 
@@ -26,18 +26,34 @@ export function useThreadReplies(options: UseThreadRepliesOptions) {
         limit,
       }], { signal });
 
+      // Filter out posts with too many hashtags (spam prevention)
+      const filteredEvents = events.filter(event => {
+        const hashtagCount = countHashtags(event.content);
+        return hashtagCount <= 3;
+      });
+
       // Sort based on the selected option
       switch (sortBy) {
         case 'chronological':
-          return events.sort((a, b) => a.created_at - b.created_at);
+          return filteredEvents.sort((a, b) => a.created_at - b.created_at);
 
         case 'zap-ranked':
-          // For now, we'll sort chronologically. Zap ranking would require additional queries
-          // TODO: Implement zap ranking
-          return events.sort((a, b) => a.created_at - b.created_at);
+          // Sort by zap count (descending), then by creation time (newest first for same zap count)
+          return filteredEvents.sort((a, b) => {
+            // Get zap counts for comparison
+            const aZaps = a.tags.filter(tag => tag[0] === 'zap').length;
+            const bZaps = b.tags.filter(tag => tag[0] === 'zap').length;
+            
+            if (aZaps !== bZaps) {
+              return bZaps - aZaps; // Higher zap count first
+            }
+            
+            // If zap counts are equal, sort by creation time (newest first)
+            return b.created_at - a.created_at;
+          });
 
         default:
-          return events.sort((a, b) => a.created_at - b.created_at);
+          return filteredEvents.sort((a, b) => a.created_at - b.created_at);
       }
     },
     enabled: !!rootEventId,

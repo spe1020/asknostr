@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Send, User, UserX } from 'lucide-react';
+import { Send, User, Key, Hash, Shield } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useAnonymousPost } from '@/hooks/useAnonymousPost';
 import { useToast } from '@/hooks/useToast';
-import { LoginArea } from '@/components/auth/LoginArea';
+import { countHashtags } from '@/lib/utils';
 
 interface ReplyFormProps {
   rootEvent: NostrEvent;
@@ -27,11 +29,13 @@ export function ReplyForm({ rootEvent, onSuccess }: ReplyFormProps) {
 
   const isPublishing = isPublishingSigned || isPublishingAnonymous;
   const canPost = content.trim().length > 0;
+  const hashtagCount = countHashtags(content);
+  const isOverLimit = hashtagCount > 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!canPost) return;
+    if (!canPost || isOverLimit) return;
 
     const replyContent = content.trim();
     const tags = [
@@ -104,57 +108,136 @@ export function ReplyForm({ rootEvent, onSuccess }: ReplyFormProps) {
 
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Textarea
-            placeholder="Share your thoughts or answer..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-[100px] resize-none"
-            disabled={isPublishing}
-          />
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Share your thoughts or answer..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="min-h-[100px] resize-none"
+              disabled={isPublishing}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                Share your knowledge or thoughts
+              </span>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <Hash className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {hashtagCount}/3 hashtags
+                  </span>
+                </div>
+                {isOverLimit && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-destructive cursor-help">
+                          Too many hashtags
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Posts with more than 3 hashtags are filtered out to prevent spam.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               {user ? (
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant={isAnonymous ? "outline" : "default"}
-                    size="sm"
-                    onClick={() => setIsAnonymous(false)}
-                    disabled={isPublishing}
-                  >
-                    <User className="h-4 w-4 mr-1" />
-                    Signed
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={isAnonymous ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setIsAnonymous(true)}
-                    disabled={isPublishing}
-                  >
-                    <UserX className="h-4 w-4 mr-1" />
-                    Anonymous
-                  </Button>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant={isAnonymous ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => setIsAnonymous(false)}
+                      disabled={isPublishing}
+                      className="flex items-center space-x-2"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Signed</span>
+                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={isAnonymous}
+                        onCheckedChange={setIsAnonymous}
+                        disabled={isPublishing}
+                      />
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant={isAnonymous ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setIsAnonymous(true)}
+                          disabled={isPublishing}
+                          className="flex items-center space-x-2"
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span>Anonymous</span>
+                        </Button>
+                        {isAnonymous && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Key className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <div className="space-y-2">
+                                  <p className="font-medium">🔐 Anonymous Posting</p>
+                                  <p className="text-sm">
+                                    Each anonymous post generates a unique, one-time cryptographic key that's 
+                                    immediately discarded after publishing. This ensures complete privacy.
+                                  </p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">
-                    <UserX className="h-3 w-3 mr-1" />
-                    Anonymous posting only
+                  <Badge variant="secondary" className="flex items-center space-x-1">
+                    <Shield className="h-3 w-3" />
+                    <span>Anonymous posting</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Key className="h-3 w-3 ml-1 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-2">
+                            <p className="font-medium">🔐 Anonymous Posting</p>
+                            <p className="text-sm">
+                              Each anonymous post generates a unique, one-time cryptographic key that's 
+                              immediately discarded after publishing. This ensures complete privacy - 
+                              even we can't trace your posts back to you!
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Perfect for sensitive questions or when you want to maintain privacy.
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </Badge>
-                  <LoginArea className="max-w-32" />
                 </div>
               )}
             </div>
 
             <Button
               type="submit"
-              disabled={!canPost || isPublishing}
+              disabled={!canPost || isPublishing || isOverLimit}
               size="sm"
             >
               <Send className="h-4 w-4 mr-1" />
-              {isPublishing ? 'Posting...' : 'Post Reply'}
+              {isPublishing ? 'Posting...' : 'Ask Nostr'}
             </Button>
           </div>
         </form>

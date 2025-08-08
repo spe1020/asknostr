@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RotateCcw, Plus } from 'lucide-react';
+import { RotateCcw, Plus, HelpCircle } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,13 +40,13 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold">#asknostr</h1>
-          <p className="text-muted-foreground">
-            Decentralized Q&A on Nostr
-          </p>
+          <div className="flex items-center space-x-2">
+            <HelpCircle className="h-6 w-6 text-primary" />
+            <h2 className="text-xl font-semibold">Recent Questions</h2>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -70,18 +70,24 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
       {/* Quick Signup for logged out users */}
       {!user && <QuickSignup />}
 
-      {/* Post Question Form */}
-      <Collapsible open={showPostForm} onOpenChange={setShowPostForm}>
-        <CollapsibleTrigger asChild>
-          <Button className="w-full gap-2" variant={showPostForm ? "secondary" : "default"}>
-            <Plus className="h-4 w-4" />
-            {showPostForm ? 'Hide Form' : 'Ask a Question'}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-4">
-          <PostQuestionForm onSuccess={handlePostSuccess} />
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Additional Post Question Form */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Plus className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium text-muted-foreground">Ask Another Question</h3>
+        </div>
+        <Collapsible open={showPostForm} onOpenChange={setShowPostForm}>
+          <CollapsibleTrigger asChild>
+            <Button className="w-full gap-2" variant={showPostForm ? "secondary" : "outline"}>
+              <Plus className="h-4 w-4" />
+              {showPostForm ? 'Hide Form' : 'Ask Another Question'}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <PostQuestionForm onSuccess={handlePostSuccess} />
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
 
       {/* Questions List */}
       <div className="space-y-4">
@@ -148,13 +154,20 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
         {/* Questions List */}
         {questions && questions.length > 0 && (
           <div className="space-y-4">
-            {questions.map((question) => (
-              <QuestionCard
-                key={question.id}
-                event={question}
-                onClick={() => onQuestionClick(question)}
-              />
-            ))}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Questions ({questions.length})
+              </h3>
+            </div>
+            <div className="space-y-4">
+              {questions.map((question) => (
+                <QuestionCard
+                  key={question.id}
+                  event={question}
+                  onClick={() => onQuestionClick(question)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
