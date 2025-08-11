@@ -10,6 +10,7 @@ import { InfoRibbon } from '@/components/InfoRibbon';
 import { useTutorial } from '@/hooks/useTutorial';
 import { HomepagePrompt } from '@/components/HomepagePrompt';
 import { HeaderSignupButton } from '@/components/HeaderSignupButton';
+import { MobileAuthMenu } from '@/components/MobileAuthMenu';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Index = () => {
@@ -50,16 +51,21 @@ const Index = () => {
               <RelaySelector />
             </div>
 
-            {/* Center: Signup button when not logged in */}
+            {/* Center: Signup button when not logged in (desktop only) */}
             {!user && (
-              <div className="flex-1 flex justify-center">
+              <div className="flex-1 flex justify-center hidden md:flex">
                 <HeaderSignupButton />
               </div>
             )}
 
-            {/* Right side: Login area */}
+            {/* Right side: Auth area */}
             <div className="flex items-center">
-              <LoginArea className="max-w-48" />
+              {/* Mobile: Show MobileAuthMenu */}
+              <MobileAuthMenu />
+              {/* Desktop: Show LoginArea */}
+              <div className="hidden md:block">
+                <LoginArea className="max-w-48" />
+              </div>
             </div>
           </div>
         </div>

@@ -82,7 +82,7 @@ export function HeaderSignupButton() {
         onClick={handleCreateAccount}
         disabled={isCreating}
         size="sm"
-        className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-xs px-3 py-1.5 h-8 whitespace-nowrap"
+        className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-xs px-3 py-1.5 h-8 whitespace-nowrap hidden md:flex"
       >
         {isCreating ? (
           <>
