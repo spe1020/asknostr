@@ -9,10 +9,13 @@ import { NostrTutorial } from '@/components/NostrTutorial';
 import { InfoRibbon } from '@/components/InfoRibbon';
 import { useTutorial } from '@/hooks/useTutorial';
 import { HomepagePrompt } from '@/components/HomepagePrompt';
+import { HeaderSignupButton } from '@/components/HeaderSignupButton';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Index = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<NostrEvent | null>(null);
   const { showTutorial, closeTutorial, openTutorial } = useTutorial();
+  const { user } = useCurrentUser();
 
   useSeoMeta({
     title: 'AskNostr - Q&A Powered by Nostr',
@@ -36,6 +39,7 @@ const Index = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Left side: Logo, subtitle, and relay selector */}
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-bold">AskNostr</h1>
               {!selectedQuestion && (
@@ -43,11 +47,19 @@ const Index = () => {
                   Q&A Powered by Nostr
                 </p>
               )}
+              <RelaySelector />
             </div>
 
-            <div className="flex items-center space-x-8">
-              <RelaySelector />
-              <LoginArea className="max-w-40" />
+            {/* Center: Signup button when not logged in */}
+            {!user && (
+              <div className="flex-1 flex justify-center">
+                <HeaderSignupButton />
+              </div>
+            )}
+
+            {/* Right side: Login area */}
+            <div className="flex items-center">
+              <LoginArea className="max-w-48" />
             </div>
           </div>
         </div>
@@ -62,10 +74,10 @@ const Index = () => {
           />
         ) : (
           <>
-            {/* Prominent Question Prompt */}
+            {/* Compact Question Prompt */}
             <HomepagePrompt />
             
-            {/* Questions Feed */}
+            {/* Questions Feed - Front and Center */}
             <QuestionsFeed onQuestionClick={handleQuestionClick} />
           </>
         )}

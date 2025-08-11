@@ -1,18 +1,12 @@
 import { useState } from 'react';
-import { RotateCcw, Plus, HelpCircle } from 'lucide-react';
+import { RotateCcw, HelpCircle } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAskNostrQuestions, type SortOption } from '@/hooks/useAskNostrQuestions';
 import { QuestionCard } from '@/components/QuestionCard';
-import { PostQuestionForm } from '@/components/PostQuestionForm';
-import { RelaySelector } from '@/components/RelaySelector';
-import { QuickSignup } from '@/components/QuickSignup';
-import { AskNostrInfo } from '@/components/AskNostrInfo';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface QuestionsFeedProps {
   onQuestionClick: (event: NostrEvent) => void;
@@ -20,74 +14,38 @@ interface QuestionsFeedProps {
 
 export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
-  const [showPostForm, setShowPostForm] = useState(false);
-  const { user } = useCurrentUser();
-
-  const { data: questions, isLoading, error, refetch } = useAskNostrQuestions({
-    sortBy,
-    limit: 50,
-  });
+  const { data: questions, isLoading, error, refetch } = useAskNostrQuestions({ sortBy });
 
   const handleRefresh = () => {
     refetch();
   };
 
-  const handlePostSuccess = () => {
-    setShowPostForm(false);
-    // Refresh the feed after a successful post
-    setTimeout(() => refetch(), 1000);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header with Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <HelpCircle className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">Recent Questions</h2>
-          </div>
-        </div>
+      {/* Controls */}
+      <div className="flex items-center justify-end space-x-2">
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RotateCcw className="h-4 w-4" />
+        </Button>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RotateCcw className="h-4 w-4" />
-          </Button>
-
-          <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="most-replied">Most Replied</SelectItem>
-              <SelectItem value="most-zapped">Most Zapped</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Most Recent</SelectItem>
+            <SelectItem value="most-replied">Most Replied (12h)</SelectItem>
+            <SelectItem value="most-zapped">Most Zapped (12h)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Quick Signup for logged out users */}
-      {!user && <QuickSignup />}
-
-      {/* Additional Post Question Form */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Plus className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium text-muted-foreground">Ask Another Question</h3>
+      {/* Context indicator for time-based sorting */}
+      {(sortBy === 'most-replied' || sortBy === 'most-zapped') && (
+        <div className="text-xs text-muted-foreground text-right">
+          Based on activity from the past 12 hours
         </div>
-        <Collapsible open={showPostForm} onOpenChange={setShowPostForm}>
-          <CollapsibleTrigger asChild>
-            <Button className="w-full gap-2" variant={showPostForm ? "secondary" : "outline"}>
-              <Plus className="h-4 w-4" />
-              {showPostForm ? 'Hide Form' : 'Ask Another Question'}
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-4">
-            <PostQuestionForm onSuccess={handlePostSuccess} />
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+      )}
 
       {/* Questions List */}
       <div className="space-y-4">
@@ -117,59 +75,50 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
 
         {/* Error State */}
         {error && (
-          <Card className="border-dashed">
-            <CardContent className="py-12 px-8 text-center">
-              <div className="max-w-sm mx-auto space-y-6">
+          <Card className="border-destructive/50">
+            <CardContent className="p-6 text-center">
+              <div className="space-y-2">
+                <HelpCircle className="h-12 w-12 text-destructive mx-auto" />
+                <h3 className="text-lg font-semibold text-destructive">Failed to load questions</h3>
                 <p className="text-muted-foreground">
-                  Failed to load questions. Try another relay?
+                  {error.message || 'An error occurred while loading questions.'}
                 </p>
-                <RelaySelector className="w-full" />
+                <Button onClick={handleRefresh} variant="outline">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Empty State */}
-        {!isLoading && !error && questions && questions.length === 0 && (
+        {/* Questions */}
+        {questions && questions.length > 0 ? (
           <div className="space-y-4">
-            <AskNostrInfo />
-            <Card className="border-dashed">
-              <CardContent className="py-12 px-8 text-center">
-                <div className="max-w-sm mx-auto space-y-6">
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground">
-                      No questions found on this relay.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Try switching relays or be the first to ask a question!
-                    </p>
-                  </div>
-                  <RelaySelector className="w-full" />
+            {questions.map((question) => (
+              <QuestionCard
+                key={question.id}
+                event={question}
+                onClick={() => onQuestionClick(question)}
+                showFullContent={false}
+              />
+            ))}
+          </div>
+        ) : !isLoading && !error ? (
+          <Card className="border-dashed">
+            <CardContent className="py-12 px-8 text-center">
+              <div className="max-w-sm mx-auto space-y-6">
+                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto" />
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">No questions yet</h3>
+                  <p className="text-muted-foreground">
+                    Be the first to ask a question! Use the form above to get started.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Questions List */}
-        {questions && questions.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                Questions ({questions.length})
-              </h3>
-            </div>
-            <div className="space-y-4">
-              {questions.map((question) => (
-                <QuestionCard
-                  key={question.id}
-                  event={question}
-                  onClick={() => onQuestionClick(question)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </div>
   );

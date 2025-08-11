@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Zap, UserPlus, Sparkles } from 'lucide-react';
+import { Key, Unlock, UserPlus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/useToast';
 import { generateSecretKey, nip19 } from 'nostr-tools';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 
-export function QuickSignup() {
+export function HeaderSignupButton() {
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
   const loginActions = useLoginActions();
@@ -65,43 +64,40 @@ export function QuickSignup() {
   };
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="bg-primary text-primary-foreground p-3 rounded-full">
-                <UserPlus className="h-5 w-5" />
-              </div>
-              <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-yellow-500 animate-pulse" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">Ready to join the conversation?</p>
-              <p className="text-xs text-muted-foreground">
-                Create your Nostr identity in one click
-              </p>
-            </div>
+    <div className="flex items-center justify-center space-x-2">
+      <div className="hidden md:flex items-center space-x-2 text-sm">
+        <div className="relative">
+          <div className="bg-primary text-primary-foreground p-2 rounded-full">
+            <UserPlus className="h-4 w-4" />
           </div>
-
-          <Button
-            onClick={handleCreateAccount}
-            disabled={isCreating}
-            className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-          >
-            {isCreating ? (
-              <>
-                <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Creating...
-              </>
-            ) : (
-              <>
-                <Zap className="h-3 w-3" />
-                Create Account
-              </>
-            )}
-          </Button>
+          <Sparkles className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 text-yellow-500 animate-pulse" />
         </div>
-      </CardContent>
-    </Card>
+        <div className="text-xs">
+          <p className="font-medium">Ready to join?</p>
+          <p className="text-muted-foreground">Unlock your identity instantly</p>
+        </div>
+      </div>
+
+      <Button
+        onClick={handleCreateAccount}
+        disabled={isCreating}
+        size="sm"
+        className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-xs px-3 py-1.5 h-8 whitespace-nowrap"
+      >
+        {isCreating ? (
+          <>
+            <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Creating...
+          </>
+        ) : (
+          <>
+            <Key className="h-3 w-3" />
+            <Unlock className="h-3 w-3" />
+            <span className="hidden sm:inline">1-click</span>
+            <span className="sm:hidden">1-click</span>
+          </>
+        )}
+      </Button>
+    </div>
   );
 }

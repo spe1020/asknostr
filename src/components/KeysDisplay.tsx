@@ -15,6 +15,9 @@ export function KeysDisplay() {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // Debug logging
+  console.log('KeysDisplay render:', { user, logins, loginsLength: logins?.length });
+  
   if (!user || !logins.length) {
     return (
       <Card>
@@ -30,8 +33,13 @@ export function KeysDisplay() {
   const currentLogin = logins[0];
   const npub = nip19.npubEncode(user.pubkey);
   
+  // Debug logging for login structure
+  console.log('Login data:', { currentLogin, loginType: currentLogin.type, userPubkey: user.pubkey });
+  
   // Get nsec if available (only for nsec login type)
   const nsec = currentLogin.type === 'nsec' ? (currentLogin as { data: { nsec: string } }).data.nsec : null;
+  
+  console.log('Processed data:', { npub, nsec });
 
   const copyToClipboard = async (text: string, fieldName: string) => {
     try {

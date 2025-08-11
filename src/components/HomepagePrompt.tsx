@@ -117,25 +117,22 @@ export function HomepagePrompt() {
   };
 
   return (
-    <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 mb-8">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">
+    <Card className="border border-muted bg-muted/30 mb-6">
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">
               What do you want to ask Nostr?
             </h2>
-            <p className="text-muted-foreground">
-              Get answers from the decentralized community
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-2">
               <Textarea
                 placeholder={PROMPT_QUESTIONS[currentPromptIndex]}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[120px] resize-none text-lg transition-all duration-500"
+                className="min-h-[80px] resize-none text-base transition-all duration-500"
                 disabled={isPublishing}
               />
               <div className="flex items-center justify-between">
@@ -249,8 +246,8 @@ export function HomepagePrompt() {
               <Button
                 type="submit"
                 disabled={!canPost || isPublishing || isOverLimit}
-                size="lg"
-                className="px-8"
+                size="default"
+                className="px-6"
               >
                 <Send className="h-4 w-4 mr-2" />
                 {isPublishing ? 'Posting...' : 'Ask Nostr'}

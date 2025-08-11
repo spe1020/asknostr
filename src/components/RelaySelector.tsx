@@ -1,7 +1,6 @@
 import { Check, Wifi, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -106,12 +105,7 @@ export function RelaySelector(props: RelaySelectorProps) {
                 size="icon"
                 className={cn("h-8 w-8 relative mr-2", className)}
               >
-                <Wifi className="h-4 w-4" />
-                {selectedRelays.length > 1 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs">
-                    {selectedRelays.length}
-                  </Badge>
-                )}
+                <Wifi className="h-4 w-4 text-muted-foreground" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[350px] p-0" align="end">
