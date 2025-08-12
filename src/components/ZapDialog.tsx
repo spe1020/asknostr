@@ -41,11 +41,15 @@ interface ZapDialogProps {
 }
 
 const presetAmounts = [
-  { amount: 1, icon: Sparkle },
-  { amount: 50, icon: Sparkles },
-  { amount: 100, icon: Zap },
-  { amount: 250, icon: Star },
-  { amount: 1000, icon: Rocket },
+  { amount: 1, icon: Sparkle, label: '1 sat' },
+  { amount: 10, icon: Sparkle, label: '10 sats' },
+  { amount: 50, icon: Sparkles, label: '50 sats' },
+  { amount: 100, icon: Zap, label: '100 sats' },
+  { amount: 250, icon: Star, label: '250 sats' },
+  { amount: 500, icon: Star, label: '500 sats' },
+  { amount: 1000, icon: Rocket, label: '1k sats' },
+  { amount: 2500, icon: Rocket, label: '2.5k sats' },
+  { amount: 5000, icon: Rocket, label: '5k sats' },
 ];
 
 interface ZapContentProps {
@@ -88,6 +92,9 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
         {/* Payment amount display */}
         <div className="text-center pt-4">
           <div className="text-2xl font-bold">{amount} sats</div>
+          <div className="text-sm text-muted-foreground mt-1">
+            Lightning Network Payment
+          </div>
         </div>
 
         <Separator className="my-4" />
@@ -108,6 +115,29 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
                 )}
               </CardContent>
             </Card>
+          </div>
+
+          {/* Transaction Details */}
+          <div className="mt-4 p-3 bg-muted/30 rounded-lg border">
+            <div className="text-sm font-medium text-center mb-3 text-muted-foreground">
+              Payment Details
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Amount:</span>
+                <span className="font-mono font-medium">{amount} sats</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Network Fee:</span>
+                <span className="text-muted-foreground">~1-3 sats</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-mono font-semibold text-primary">
+                  ~{typeof amount === 'string' ? parseInt(amount) + 2 : amount + 2} sats
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Invoice input */}
@@ -180,53 +210,127 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
                 setAmount(parseInt(value, 10));
               }
             }}
-            className="grid grid-cols-5 gap-1 w-full"
+            className="grid grid-cols-3 gap-2 w-full"
           >
-            {presetAmounts.map(({ amount: presetAmount, icon: Icon }) => (
+            {presetAmounts.map(({ amount: presetAmount, icon: Icon, label }) => (
               <ToggleGroupItem
                 key={presetAmount}
                 value={String(presetAmount)}
-                className="flex flex-col h-auto min-w-0 text-xs px-1 py-2"
+                className="flex flex-col h-auto min-w-0 text-xs px-2 py-3 hover:bg-primary/10"
               >
                 <Icon className="h-4 w-4 mb-1" />
-                <span className="truncate">{presetAmount}</span>
+                <span className="truncate font-medium">{presetAmount}</span>
+                <span className="text-[10px] text-muted-foreground truncate">{label}</span>
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
+          
+          {/* Transaction Summary Table */}
+          <div className="mt-4 p-3 bg-muted/30 rounded-lg border">
+            <div className="text-sm font-medium text-center mb-3 text-muted-foreground">
+              Transaction Summary
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Amount:</span>
+                <span className="font-mono font-medium">
+                  {typeof amount === 'string' ? parseInt(amount, 10) : amount} sats
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Network Fee:</span>
+                <span className="text-muted-foreground">~1-3 sats</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-mono font-semibold text-primary">
+                  ~{typeof amount === 'string' ? parseInt(amount, 10) + 2 : amount + 2} sats
+                </span>
+              </div>
+            </div>
+          </div>
+          
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-muted" />
             <span className="text-xs text-muted-foreground">OR</span>
             <div className="h-px flex-1 bg-muted" />
           </div>
-          <Input
-            ref={inputRef}
-            id="custom-amount"
-            type="number"
-            placeholder="Custom amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full text-sm"
-          />
-          <Textarea
-            id="custom-comment"
-            placeholder="Add a comment (optional)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="w-full resize-none text-sm"
-            rows={2}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="custom-amount" className="text-sm font-medium">
+              Custom Amount (sats)
+            </Label>
+            <Input
+              ref={inputRef}
+              id="custom-amount"
+              type="number"
+              min="1"
+              max="1000000"
+              placeholder="Enter amount in sats"
+              value={amount}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || parseInt(value) > 0) {
+                  setAmount(value);
+                }
+              }}
+              className="w-full text-sm font-mono"
+            />
+            {typeof amount === 'string' && amount !== '' && (
+              <div className="text-xs text-muted-foreground">
+                {parseInt(amount) < 100 ? '💡 Small amounts are great for micro-tipping!' : 
+                 parseInt(amount) < 1000 ? '🎯 Good amount for showing appreciation!' :
+                 parseInt(amount) < 10000 ? '🚀 Generous zap! This will make their day!' :
+                 '🌟 Wow! You\'re incredibly generous!'}
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="custom-comment" className="text-sm font-medium">
+              Comment (optional)
+            </Label>
+            <Textarea
+              id="custom-comment"
+              placeholder="Add a personal message with your zap..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full resize-none text-sm"
+              rows={2}
+              maxLength={200}
+            />
+            <div className="text-xs text-muted-foreground text-right">
+              {comment.length}/200
+            </div>
+          </div>
         </div>
         <div className="px-4 pb-4">
-          <Button onClick={handleZap} className="w-full" disabled={isZapping} size="default">
+          <Button 
+            onClick={handleZap} 
+            className="w-full" 
+            disabled={isZapping || (typeof amount === 'string' && (amount === '' || parseInt(amount) <= 0))} 
+            size="default"
+          >
             {isZapping ? (
-              'Creating invoice...'
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                Creating invoice...
+              </>
             ) : (
               <>
                 <Zap className="h-4 w-4 mr-2" />
-                Zap {amount} sats
+                Zap {typeof amount === 'string' ? (amount === '' ? '0' : amount) : amount} sats
               </>
             )}
           </Button>
+          
+          {/* Final Transaction Summary */}
+          <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Final Amount:</span>
+              <span className="font-mono font-semibold text-primary">
+                {typeof amount === 'string' ? (amount === '' ? '0' : parseInt(amount)) : amount} sats
+              </span>
+            </div>
+          </div>
         </div>
       </>
     )}
