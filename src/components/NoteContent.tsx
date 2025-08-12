@@ -103,6 +103,15 @@ export function NoteContent({
                 originalText={fullMatch}
               />
             );
+          } else if (decoded.type === 'nprofile') {
+            // Handle profile references - display profile information inline
+            parts.push(
+              <NostrProfileReference 
+                key={`profile-${keyCounter++}`} 
+                profileData={decoded.data} 
+                originalText={fullMatch}
+              />
+            );
           } else {
             // For other types, just show as a link
             parts.push(
@@ -330,6 +339,111 @@ function NostrEventReference({ _eventData, originalText }: NostrEventReferencePr
     >
       {originalText}
     </Link>
+  );
+}
+
+// Nostr profile reference component - displays profile information inline
+interface NostrProfileReferenceProps {
+  profileData: {
+    pubkey: string;
+    relays?: string[];
+    petname?: string;
+  };
+  originalText: string;
+}
+
+function NostrProfileReference({ profileData, originalText }: NostrProfileReferenceProps) {
+  const { pubkey, relays, petname } = profileData;
+  const author = useAuthor(pubkey);
+  const npub = nip19.npubEncode(pubkey);
+  const metadata = author.data?.metadata;
+  
+  const displayName = petname || metadata?.name || genUserName(pubkey);
+  const profileImage = metadata?.picture;
+  const about = metadata?.about;
+  const nip05 = metadata?.nip05;
+
+  return (
+    <div className="inline-block">
+      <span className="text-blue-500 hover:underline cursor-pointer">
+        {originalText}
+      </span>
+      
+      {/* Inline profile preview */}
+      <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
+        <div className="flex items-start space-x-3">
+          {/* Profile Avatar */}
+          <div className="flex-shrink-0">
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-muted">
+              {profileImage ? (
+                <img 
+                  src={profileImage} 
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm font-medium">
+                  {displayName.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Profile Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="font-medium text-sm">{displayName}</span>
+              {nip05 && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  {nip05}
+                </span>
+              )}
+            </div>
+            
+            {about && (
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {about}
+              </p>
+            )}
+            
+            {relays && relays.length > 0 && (
+              <div className="mt-2 flex items-center space-x-1">
+                <span className="text-xs text-muted-foreground">Relays:</span>
+                <div className="flex space-x-1">
+                  {relays.slice(0, 3).map((relay, index) => (
+                    <span 
+                      key={index}
+                      className="text-xs bg-muted px-2 py-1 rounded"
+                      title={relay}
+                    >
+                      {relay.replace(/^wss?:\/\//, '').replace(/\/$/, '')}
+                    </span>
+                  ))}
+                  {relays.length > 3 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{relays.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Action Links */}
+        <div className="mt-3 flex items-center justify-between">
+          <Link 
+            to={`/${npub}`}
+            className="text-xs text-blue-500 hover:underline"
+          >
+            View profile →
+          </Link>
+          <span className="text-xs text-muted-foreground">
+            {petname ? `Petname: ${petname}` : 'No petname'}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
