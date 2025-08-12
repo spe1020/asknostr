@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Send, Hash, User, Shield, Key } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useAnonymousPost } from '@/hooks/useAnonymousPost';
@@ -68,7 +65,6 @@ const PROMPT_QUESTIONS = [
 export function HomepagePrompt() {
   const [content, setContent] = useState('');
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const { user } = useCurrentUser();
   const { mutate: publishSigned, isPending: isPublishingSigned } = useNostrPublish();
   const { mutate: publishAnonymous, isPending: isPublishingAnonymous } = useAnonymousPost();
@@ -97,17 +93,17 @@ export function HomepagePrompt() {
     const tags = [['t', 'asknostr']];
 
     try {
-      if (isAnonymous || !user) {
-        // Post anonymously
-        publishAnonymous({
+      if (user) {
+        // Post with signed-in user
+        publishSigned({
+          kind: 1,
           content: questionContent,
           tags,
-          kind: 1,
         }, {
           onSuccess: () => {
             setContent('');
             toast({
-              title: 'Question posted anonymously!',
+              title: 'Question posted!',
               description: 'Your question has been published to the #asknostr feed.',
             });
           },
@@ -120,16 +116,16 @@ export function HomepagePrompt() {
           },
         });
       } else {
-        // Post with signed-in user
-        publishSigned({
-          kind: 1,
+        // Post anonymously
+        publishAnonymous({
           content: questionContent,
           tags,
+          kind: 1,
         }, {
           onSuccess: () => {
             setContent('');
             toast({
-              title: 'Question posted!',
+              title: 'Question posted anonymously!',
               description: 'Your question has been published to the #asknostr feed.',
             });
           },
@@ -152,7 +148,7 @@ export function HomepagePrompt() {
   };
 
   return (
-    <Card className="border border-muted bg-muted/30 mb-6">
+    <Card id="homepage-prompt" className="border border-muted bg-muted/30 mb-6">
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="text-center space-y-1">
@@ -171,109 +167,9 @@ export function HomepagePrompt() {
                 disabled={isPublishing}
               />
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="text-xs">
-                    #asknostr
-                  </Badge>
-                  {user && (
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        type="button"
-                        variant={isAnonymous ? "outline" : "default"}
-                        size="sm"
-                        onClick={() => setIsAnonymous(false)}
-                        disabled={isPublishing}
-                        className="flex items-center space-x-1 h-6 px-2"
-                      >
-                        <User className="h-3 w-3" />
-                        <span className="text-xs">Signed</span>
-                      </Button>
-                      <Switch
-                        checked={isAnonymous}
-                        onCheckedChange={setIsAnonymous}
-                        disabled={isPublishing}
-                        className="scale-75"
-                      />
-                      <Button
-                        type="button"
-                        variant={isAnonymous ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsAnonymous(true)}
-                        disabled={isPublishing}
-                        className="flex items-center space-x-1 h-6 px-2"
-                      >
-                        <Shield className="h-3 w-3" />
-                        <span className="text-xs">Anonymous</span>
-                      </Button>
-                      {isAnonymous && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Key className="h-3 w-3 text-muted-foreground cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <div className="space-y-2">
-                                <p className="font-medium">🔐 Anonymous Posting</p>
-                                <p className="text-sm">
-                                  Each anonymous post generates a unique, one-time cryptographic key that's 
-                                  immediately discarded after publishing. This ensures complete privacy.
-                                </p>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                  )}
-                  {!user && (
-                    <Badge variant="secondary" className="text-xs flex items-center space-x-1">
-                      <Shield className="h-3 w-3" />
-                      <span>Anonymous</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Key className="h-3 w-3 ml-1 cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <div className="space-y-2">
-                              <p className="font-medium">🔐 Anonymous Posting</p>
-                              <p className="text-sm">
-                                Each anonymous post generates a unique, one-time cryptographic key that's 
-                                immediately discarded after publishing. This ensures complete privacy - 
-                                even we can't trace your posts back to you!
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Perfect for sensitive questions or when you want to maintain privacy.
-                              </p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1">
-                    <Hash className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {hashtagCount}/3 hashtags
-                    </span>
-                  </div>
-                  {isOverLimit && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs text-destructive cursor-help">
-                            Too many hashtags
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Posts with more than 3 hashtags are filtered out to prevent spam.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
+                <span className="text-xs text-muted-foreground">
+                  💡 Your question will automatically include the #asknostr hashtag
+                </span>
               </div>
             </div>
 

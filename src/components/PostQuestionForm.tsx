@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, User, Key, Hash, Shield } from 'lucide-react';
+import { Send, User, Key, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -118,28 +118,6 @@ export function PostQuestionForm({ onSuccess }: PostQuestionFormProps) {
               <p className="text-xs text-muted-foreground">
                 💡 Your question will automatically include the #asknostr hashtag
               </p>
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1">
-                  <Hash className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {hashtagCount}/3 hashtags
-                  </span>
-                </div>
-                {isOverLimit && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-destructive cursor-help">
-                          Too many hashtags
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Posts with more than 3 hashtags are filtered out to prevent spam.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
             </div>
           </div>
 

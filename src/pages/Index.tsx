@@ -12,11 +12,15 @@ import { HomepagePrompt } from '@/components/HomepagePrompt';
 import { HeaderSignupButton } from '@/components/HeaderSignupButton';
 import { MobileAuthMenu } from '@/components/MobileAuthMenu';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<NostrEvent | null>(null);
   const { showTutorial, closeTutorial, openTutorial } = useTutorial();
   const { user } = useCurrentUser();
+  const isMobile = useIsMobile();
 
   useSeoMeta({
     title: 'AskNostr - Q&A Powered by Nostr',
@@ -49,6 +53,7 @@ const Index = () => {
                 </p>
               )}
               <RelaySelector />
+              <ThemeToggle />
             </div>
 
             {/* Center: Signup button when not logged in (desktop only) */}
@@ -61,7 +66,9 @@ const Index = () => {
             {/* Right side: Auth area */}
             <div className="flex items-center">
               {/* Mobile: Show MobileAuthMenu */}
-              <MobileAuthMenu />
+              <div className="md:hidden">
+                <MobileAuthMenu />
+              </div>
               {/* Desktop: Show LoginArea */}
               <div className="hidden md:block">
                 <LoginArea className="max-w-48" />
@@ -72,7 +79,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
+      <main className={isMobile ? "px-4 py-4" : "container mx-auto px-4 py-6 max-w-4xl"}>
         {selectedQuestion ? (
           <ThreadView
             rootEvent={selectedQuestion}
@@ -102,6 +109,28 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Mobile Navigation */}
+      <MobileNavigation
+        onHomeClick={() => setSelectedQuestion(null)}
+        onNewQuestionClick={() => {
+          // Scroll to question prompt
+          document.querySelector('#homepage-prompt')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onProfileClick={() => {
+          // TODO: Navigate to profile page
+          console.log('Profile clicked');
+        }}
+        onSearchClick={() => {
+          // TODO: Open search
+          console.log('Search clicked');
+        }}
+        onMessagesClick={() => {
+          // TODO: Navigate to messages
+          console.log('Messages clicked');
+        }}
+        currentPath="/"
+      />
 
       {/* Tutorial */}
       <NostrTutorial open={showTutorial} onClose={closeTutorial} />

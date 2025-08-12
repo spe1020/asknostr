@@ -99,3 +99,181 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Custom loading animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Staggered fade-in animations */
+  .animate-in {
+    animation-fill-mode: both;
+  }
+
+  .fade-in-0 {
+    animation-name: fadeIn;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+  }
+
+  .slide-in-from-y-2 {
+    animation-name: slideInFromY;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromY {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Pulse animation for loading states */
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 768px) {
+    /* Improve touch targets */
+    button, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Better scrolling on mobile */
+    .overflow-auto, .overflow-scroll {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Safe area support for modern mobile devices */
+    .safe-area-inset-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-area-inset-top {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .safe-area-inset-left {
+      padding-left: env(safe-area-inset-left);
+    }
+
+    .safe-area-inset-right {
+      padding-right: env(safe-area-inset-right);
+    }
+
+    /* Touch-friendly hover states */
+    @media (hover: none) and (pointer: coarse) {
+      .hover\:shadow-md:hover {
+        box-shadow: none;
+      }
+      
+      .hover\:border-primary\/30:hover {
+        border-color: hsl(var(--border));
+      }
+    }
+
+    /* Prevent text selection on interactive elements */
+    .select-none {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Better focus states for touch devices */
+    .focus-visible\:ring-2:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px hsl(var(--ring));
+    }
+  }
+
+  /* Pull to refresh animations */
+  @keyframes pullIndicator {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .pull-indicator {
+    animation: pullIndicator 0.3s ease-out;
+  }
+
+  /* Mobile navigation animations */
+  @keyframes slideUpFromBottom {
+    0% {
+      transform: translateY(100%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .slide-up-from-bottom {
+    animation: slideUpFromBottom 0.3s ease-out;
+  }
+
+  /* Touch feedback animations */
+  @keyframes touchScale {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.98);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .touch-scale {
+    animation: touchScale 0.1s ease-out;
+  }
+}

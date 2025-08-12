@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { RotateCcw, HelpCircle } from 'lucide-react';
+import { RotateCcw, HelpCircle, Loader2 } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAskNostrQuestions, type SortOption } from '@/hooks/useAskNostrQuestions';
 import { QuestionCard } from '@/components/QuestionCard';
+import { QuestionCardSkeleton } from '@/components/QuestionCardSkeleton';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PullToRefresh } from '@/components/PullToRefresh';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { MobileButton } from '@/components/MobileLayout';
 
 interface QuestionsFeedProps {
   onQuestionClick: (event: NostrEvent) => void;
@@ -14,22 +18,62 @@ interface QuestionsFeedProps {
 
 export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
-  const { data: questions, isLoading, error, refetch } = useAskNostrQuestions({ sortBy });
+  const { data: questions, isLoading, error, refetch, isRefetching } = useAskNostrQuestions({ sortBy });
+  const isMobile = useIsMobile();
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    await refetch();
   };
 
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex items-center justify-end space-x-2">
-        <Button variant="outline" size="sm" onClick={handleRefresh}>
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center justify-between space-x-2">
+        {/* Mobile: Full-width refresh button */}
+        {isMobile ? (
+          <MobileButton
+            variant="outline"
+            fullWidth
+            onClick={handleRefresh}
+            disabled={isRefetching}
+            className="flex-1"
+          >
+            {isRefetching ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </>
+            )}
+          </MobileButton>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefetching}
+            className="min-w-[80px]"
+          >
+            {isRefetching ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </>
+            )}
+          </Button>
+        )}
 
         <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className={isMobile ? "w-full" : "w-40"}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -48,30 +92,34 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
       )}
 
       {/* Questions List */}
-      <div className="space-y-4">
-        {/* Loading State */}
-        {isLoading && (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/5" />
-                    <Skeleton className="h-4 w-3/5" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="space-y-4">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="space-y-4">
+              {/* Initial loading with staggered animation */}
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="opacity-0 animate-in fade-in-0 slide-in-from-y-2"
+                  style={{
+                    animationDelay: `${i * 100}ms`,
+                    animationFillMode: 'forwards'
+                  }}
+                >
+                  <QuestionCardSkeleton />
+                </div>
+              ))}
+              
+              {/* Loading indicator at bottom */}
+              <div className="flex justify-center py-8">
+                <div className="flex items-center space-x-2 text-muted-foreground">
+                  <LoadingSpinner size="sm" />
+                  <span className="text-sm">Loading questions...</span>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Error State */}
         {error && (
@@ -95,13 +143,21 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
         {/* Questions */}
         {questions && questions.length > 0 ? (
           <div className="space-y-4">
-            {questions.map((question) => (
-              <QuestionCard
+            {questions.map((question, index) => (
+              <div
                 key={question.id}
-                event={question}
-                onClick={() => onQuestionClick(question)}
-                showFullContent={false}
-              />
+                className="opacity-0 animate-in fade-in-0 slide-in-from-y-2"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'forwards'
+                }}
+              >
+                <QuestionCard
+                  event={question}
+                  onClick={() => onQuestionClick(question)}
+                  showFullContent={false}
+                />
+              </div>
             ))}
           </div>
         ) : !isLoading && !error ? (
@@ -119,7 +175,8 @@ export function QuestionsFeed({ onQuestionClick }: QuestionsFeedProps) {
             </CardContent>
           </Card>
         ) : null}
-      </div>
+        </div>
+      </PullToRefresh>
     </div>
   );
 }

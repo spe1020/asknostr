@@ -11,6 +11,8 @@ import { ReplyCard } from '@/components/ReplyCard';
 import { ReplyForm } from '@/components/ReplyForm';
 import { RelaySelector } from '@/components/RelaySelector';
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { MobileButton } from '@/components/MobileLayout';
 
 interface ThreadViewProps {
   rootEvent: NostrEvent;
@@ -23,6 +25,7 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
     rootEventId: rootEvent.id,
     sortBy,
   });
+  const isMobile = useIsMobile();
 
   const handleRefresh = () => {
     refetch();
@@ -39,16 +42,27 @@ export function ThreadView({ rootEvent, onBack }: ThreadViewProps) {
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
-          Back to Questions
+          <span className={isMobile ? "hidden sm:inline" : ""}>Back to Questions</span>
         </Button>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          {isMobile ? (
+            <MobileButton
+              variant="outline"
+              size="small"
+              onClick={handleRefresh}
+              className="h-10 w-10 p-0"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </MobileButton>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
 
           <Select value={sortBy} onValueChange={(value: ReplySortOption) => setSortBy(value)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className={isMobile ? "w-32" : "w-40"}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

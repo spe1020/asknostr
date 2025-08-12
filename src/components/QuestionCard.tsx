@@ -10,6 +10,10 @@ import { genUserName } from '@/lib/genUserName';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NoteContent } from '@/components/NoteContent';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useTouchGestures } from '@/hooks/useTouchGestures';
+import { useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface QuestionCardProps {
   event: NostrEvent;
@@ -25,6 +29,23 @@ export function QuestionCard({
   const author = useAuthor(event.pubkey);
   const metadata = author.data?.metadata;
   const { replyCount, zapCount } = useEventCounts(event.id);
+  const isMobile = useIsMobile();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Touch gestures for mobile
+  const { attachGestures } = useTouchGestures({
+    onLongPress: () => {
+      // Show context menu or additional actions on long press
+      console.log('Long press detected');
+    },
+    preventDefault: false,
+  });
+
+  useEffect(() => {
+    if (cardRef.current && isMobile) {
+      return attachGestures(cardRef.current);
+    }
+  }, [attachGestures, isMobile]);
 
   const displayName = metadata?.name ?? genUserName(event.pubkey);
   const nip05 = metadata?.nip05;
@@ -43,11 +64,12 @@ export function QuestionCard({
 
   return (
     <Card
+      ref={cardRef}
       className={`transition-all duration-200 ${
         onClick 
           ? 'cursor-pointer hover:shadow-md hover:border-primary/30' 
           : 'shadow-sm'
-      }`}
+      } ${isMobile ? 'active:scale-[0.98]' : ''}`}
       onClick={onClick}
     >
       <CardHeader className="pb-4">
@@ -83,9 +105,6 @@ export function QuestionCard({
               </div>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs flex-shrink-0">
-            #asknostr
-          </Badge>
         </div>
       </CardHeader>
 
@@ -106,12 +125,26 @@ export function QuestionCard({
 
           <div className="flex items-center justify-between pt-3 border-t">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="h-8 px-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "h-8 px-3",
+                  isMobile && "h-10 px-4" // Larger touch target on mobile
+                )}
+              >
                 <MessageCircle className="h-4 w-4 mr-2" />
                 <span className="text-xs font-medium">{replyCount} {replyCount === 1 ? 'answer' : 'answers'}</span>
               </Button>
 
-              <Button variant="ghost" size="sm" className="h-8 px-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "h-8 px-3",
+                  isMobile && "h-10 px-4" // Larger touch target on mobile
+                )}
+              >
                 <Zap className="h-4 w-4 mr-2" />
                 <span className="text-xs font-medium">{zapCount} zaps</span>
               </Button>
