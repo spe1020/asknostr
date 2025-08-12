@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { type NostrEvent } from '@nostrify/nostrify';
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { useAuthor } from '@/hooks/useAuthor';
+import { useNostr } from '@/hooks/useNostr';
 import { genUserName } from '@/lib/genUserName';
 import { cn } from '@/lib/utils';
 import { Image, X, ExternalLink, Download } from 'lucide-react';
@@ -84,6 +85,24 @@ export function NoteContent({
             parts.push(
               <NostrMention key={`mention-${keyCounter++}`} pubkey={pubkey} />
             );
+          } else if (decoded.type === 'note') {
+            // Handle note references - fetch and display the note content
+            parts.push(
+              <NostrNoteReference 
+                key={`note-${keyCounter++}`} 
+                noteId={decoded.data} 
+                originalText={fullMatch}
+              />
+            );
+          } else if (decoded.type === 'nevent') {
+            // Handle event references
+            parts.push(
+              <NostrEventReference 
+                key={`event-${keyCounter++}`} 
+                _eventData={decoded.data} 
+                originalText={fullMatch}
+              />
+            );
           } else {
             // For other types, just show as a link
             parts.push(
@@ -155,6 +174,161 @@ function NostrMention({ pubkey }: { pubkey: string }) {
       )}
     >
       @{displayName}
+    </Link>
+  );
+}
+
+// Nostr note reference component - fetches and displays referenced note content
+interface NostrNoteReferenceProps {
+  noteId: string;
+  originalText: string;
+}
+
+function NostrNoteReference({ noteId, originalText }: NostrNoteReferenceProps) {
+  const { nostr } = useNostr();
+  const [noteContent, setNoteContent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Fetch the referenced note
+  useEffect(() => {
+    const fetchNote = async () => {
+      try {
+        setIsLoading(true);
+        const events = await nostr.query([{ ids: [noteId] }]);
+        if (events.length > 0) {
+          setNoteContent(events[0].content);
+        } else {
+          setHasError(true);
+        }
+      } catch {
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNote();
+  }, [noteId, nostr]);
+
+  if (isLoading) {
+    return (
+      <div className="inline-block">
+        <span className="text-blue-500 hover:underline cursor-pointer">
+          {originalText}
+        </span>
+        <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-dashed animate-pulse">
+          <div className="h-4 bg-muted rounded w-32"></div>
+          <div className="h-3 bg-muted rounded w-48 mt-2"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <Link 
+        to={`/${originalText}`}
+        className="text-blue-500 hover:underline"
+      >
+        {originalText}
+      </Link>
+    );
+  }
+
+  if (!noteContent) {
+    return (
+      <Link 
+        to={`/${originalText}`}
+        className="text-blue-500 hover:underline"
+      >
+        {originalText}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="inline-block">
+      <span className="text-blue-500 hover:underline cursor-pointer" onClick={() => setIsExpanded(true)}>
+        {originalText}
+      </span>
+      
+      {/* Inline note preview */}
+      <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
+        <div className="text-sm text-muted-foreground mb-2">Referenced note:</div>
+        <div className="text-sm whitespace-pre-wrap break-words">
+          {noteContent.length > 200 
+            ? `${noteContent.slice(0, 200)}...` 
+            : noteContent
+          }
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <Link 
+            to={`/${originalText}`}
+            className="text-xs text-blue-500 hover:underline"
+          >
+            View full note →
+          </Link>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={() => setIsExpanded(true)}
+          >
+            Expand
+          </Button>
+        </div>
+      </div>
+
+      {/* Full note dialog */}
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Referenced Note</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setIsExpanded(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <div className="whitespace-pre-wrap break-words text-sm">
+                {noteContent}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Link 
+                to={`/${originalText}`}
+                className="text-blue-500 hover:underline text-sm"
+              >
+                View in full page →
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Nostr event reference component - handles nevent references
+interface NostrEventReferenceProps {
+  _eventData: unknown;
+  originalText: string;
+}
+
+function NostrEventReference({ _eventData, originalText }: NostrEventReferenceProps) {
+  return (
+    <Link 
+      to={`/${originalText}`}
+      className="text-blue-500 hover:underline"
+    >
+      {originalText}
     </Link>
   );
 }
