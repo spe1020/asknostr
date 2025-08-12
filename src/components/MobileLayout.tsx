@@ -17,7 +17,6 @@ export function MobileLayout({
   spacing = 'medium',
   maxWidth = 'lg',
 }: MobileLayoutProps) {
-  const isMobile = useIsMobile();
 
   const paddingClasses = {
     none: '',
@@ -45,7 +44,6 @@ export function MobileLayout({
     <div
       className={cn(
         "min-h-screen bg-background",
-        isMobile && "pb-20", // Account for mobile navigation
         className
       )}
     >

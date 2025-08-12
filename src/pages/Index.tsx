@@ -13,7 +13,6 @@ import { HeaderSignupButton } from '@/components/HeaderSignupButton';
 import { MobileAuthMenu } from '@/components/MobileAuthMenu';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { MobileNavigation } from '@/components/MobileNavigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const Index = () => {
@@ -110,27 +109,7 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Mobile Navigation */}
-      <MobileNavigation
-        onHomeClick={() => setSelectedQuestion(null)}
-        onNewQuestionClick={() => {
-          // Scroll to question prompt
-          document.querySelector('#homepage-prompt')?.scrollIntoView({ behavior: 'smooth' });
-        }}
-        onProfileClick={() => {
-          // TODO: Navigate to profile page
-          console.log('Profile clicked');
-        }}
-        onSearchClick={() => {
-          // TODO: Open search
-          console.log('Search clicked');
-        }}
-        onMessagesClick={() => {
-          // TODO: Navigate to messages
-          console.log('Messages clicked');
-        }}
-        currentPath="/"
-      />
+
 
       {/* Tutorial */}
       <NostrTutorial open={showTutorial} onClose={closeTutorial} />
