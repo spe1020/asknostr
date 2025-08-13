@@ -29,7 +29,7 @@ export function QuestionCard({
 }: QuestionCardProps) {
   const author = useAuthor(event.pubkey);
   const metadata = author.data?.metadata;
-  const { replyCount, zapCount } = useEventCounts(event.id);
+  const { replyCount } = useEventCounts(event.id);
   const isMobile = useIsMobile();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -146,7 +146,6 @@ export function QuestionCard({
                     isMobile && "h-10 px-4" // Larger touch target on mobile
                   )}
                   showCount={true}
-                  zapData={{ count: zapCount, totalSats: zapCount * 100, isLoading: false }}
                 />
               </div>
             </div>

@@ -4,7 +4,6 @@ import type { NostrEvent } from '@nostrify/nostrify';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthor } from '@/hooks/useAuthor';
-import { useEventCounts } from '@/hooks/useEventCounts';
 import { genUserName } from '@/lib/genUserName';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NoteContent } from '@/components/NoteContent';
@@ -18,7 +17,7 @@ interface ReplyCardProps {
 export function ReplyCard({ event }: ReplyCardProps) {
   const author = useAuthor(event.pubkey);
   const metadata = author.data?.metadata;
-  const { zapCount } = useEventCounts(event.id);
+
 
   const displayName = metadata?.name ?? genUserName(event.pubkey);
   const nip05 = metadata?.nip05;
@@ -83,7 +82,6 @@ export function ReplyCard({ event }: ReplyCardProps) {
               target={event}
               className="h-8 px-2"
               showCount={true}
-              zapData={{ count: zapCount, totalSats: zapCount * 100, isLoading: false }}
             />
           </div>
         </div>
