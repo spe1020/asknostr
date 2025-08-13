@@ -201,7 +201,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
       </div>
     ) : (
       <>
-        <div className="grid gap-3 px-4 py-4 w-full overflow-hidden">
+        <div className="grid gap-3 px-4 py-4 w-full">
           <ToggleGroup
             type="single"
             value={String(amount)}
@@ -225,30 +225,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             ))}
           </ToggleGroup>
           
-          {/* Transaction Summary Table */}
-          <div className="mt-4 p-3 bg-muted/30 rounded-lg border">
-            <div className="text-sm font-medium text-center mb-3 text-muted-foreground">
-              Transaction Summary
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Amount:</span>
-                <span className="font-mono font-medium">
-                  {typeof amount === 'string' ? parseInt(amount, 10) : amount} sats
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Network Fee:</span>
-                <span className="text-muted-foreground">~1-3 sats</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total:</span>
-                <span className="font-mono font-semibold text-primary">
-                  ~{typeof amount === 'string' ? parseInt(amount, 10) + 2 : amount + 2} sats
-                </span>
-              </div>
-            </div>
-          </div>
+
           
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-muted" />
@@ -302,7 +279,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             </div>
           </div>
         </div>
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-6">
           <Button 
             onClick={handleZap} 
             className="w-full" 
@@ -322,15 +299,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             )}
           </Button>
           
-          {/* Final Transaction Summary */}
-          <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Final Amount:</span>
-              <span className="font-mono font-semibold text-primary">
-                {typeof amount === 'string' ? (amount === '' ? '0' : parseInt(amount)) : amount} sats
-              </span>
-            </div>
-          </div>
+
         </div>
       </>
     )}
@@ -459,8 +428,16 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
     zap,
   };
 
-  if (!user || user.pubkey === target.pubkey || !author?.metadata?.lud06 && !author?.metadata?.lud16) {
-    return null;
+  // Check if user can zap
+  const canZap = user && user.pubkey !== target.pubkey && (author?.metadata?.lud06 || author?.metadata?.lud16);
+  
+  // If user can't zap, show a disabled version with helpful message
+  if (!canZap) {
+    return (
+      <div className={`cursor-not-allowed opacity-50 ${className || ''}`}>
+        {children}
+      </div>
+    );
   }
 
   if (isMobile) {
@@ -535,7 +512,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
               )}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-6 min-h-0">
             <ZapContent {...contentProps} />
           </div>
         </DrawerContent>
@@ -550,7 +527,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
           {children}
         </div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-[95vh] overflow-hidden" data-testid="zap-modal">
+      <DialogContent className="sm:max-w-[425px] max-h-[95vh]" data-testid="zap-modal">
         <DialogHeader>
           <DialogTitle className="text-lg break-words">
             {invoice ? 'Lightning Payment' : 'Send a Zap'}
@@ -565,7 +542,7 @@ export function ZapDialog({ target, children, className }: ZapDialogProps) {
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto flex-1 min-h-0 pb-2">
           <ZapContent {...contentProps} />
         </div>
       </DialogContent>

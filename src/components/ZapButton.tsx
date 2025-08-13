@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { Zap } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ZapButtonProps {
   target: NostrEvent;
@@ -24,35 +25,51 @@ export function ZapButton({
   const { webln, activeNWC } = useWallet();
 
   // Only fetch data if not provided externally
-  const { totalSats: fetchedTotalSats, isLoading } = useZaps(
+  const { totalSats: fetchedTotalSats } = useZaps(
     externalZapData ? [] : target ?? [], // Empty array prevents fetching if external data provided
     webln,
     activeNWC
   );
 
-  // Don't show zap button if user is not logged in, is the author, or author has no lightning address
-  if (!user || !target || user.pubkey === target.pubkey || (!author?.metadata?.lud16 && !author?.metadata?.lud06)) {
-    return null;
-  }
-
   // Use external data if provided, otherwise use fetched data
   const totalSats = externalZapData?.totalSats ?? fetchedTotalSats;
-  const showLoading = externalZapData?.isLoading || isLoading;
+
+  // Check if user can zap (logged in, not the author, and author has lightning address)
+  const canZap = user && target && user.pubkey !== target.pubkey && (author?.metadata?.lud16 || author?.metadata?.lud06);
+
+  const buttonContent = (
+    <div className={`flex items-center gap-1 ${className} ${!canZap ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted/50'}`}>
+      <Zap className="h-4 w-4" />
+      {showCount && totalSats > 0 && (
+        <span className="text-xs font-medium">
+          {totalSats.toLocaleString()}
+        </span>
+      )}
+    </div>
+  );
+
+  if (!canZap) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="cursor-not-allowed">
+              {buttonContent}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            {!user ? 'Login to zap' : 
+             user.pubkey === target.pubkey ? 'You cannot zap your own content' : 
+             'Author has no lightning address'}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <ZapDialog target={target}>
-      <div className={`flex items-center gap-1 ${className}`}>
-        <Zap className="h-4 w-4" />
-        <span className="text-xs">
-          {showLoading ? (
-            '...'
-          ) : showCount && totalSats > 0 ? (
-            `${totalSats.toLocaleString()}`
-          ) : (
-            'Zap'
-          )}
-        </span>
-      </div>
+      {buttonContent}
     </ZapDialog>
   );
 }
