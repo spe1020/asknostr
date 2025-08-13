@@ -1,5 +1,5 @@
 import { formatDistanceToNow, format } from 'date-fns';
-import { MessageCircle, Zap, Clock } from 'lucide-react';
+import { MessageCircle, Clock } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { ZapButton } from '@/components/ZapButton';
 
 interface QuestionCardProps {
   event: NostrEvent;
@@ -137,17 +138,17 @@ export function QuestionCard({
                 <span className="text-xs font-medium">{replyCount} {replyCount === 1 ? 'answer' : 'answers'}</span>
               </Button>
 
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={cn(
-                  "h-8 px-3",
-                  isMobile && "h-10 px-4" // Larger touch target on mobile
-                )}
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                <span className="text-xs font-medium">{zapCount} zaps</span>
-              </Button>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ZapButton 
+                  target={event}
+                  className={cn(
+                    "h-8 px-3",
+                    isMobile && "h-10 px-4" // Larger touch target on mobile
+                  )}
+                  showCount={true}
+                  zapData={{ count: zapCount, totalSats: zapCount * 100, isLoading: false }}
+                />
+              </div>
             </div>
 
             {onClick && !showFullContent && event.content.length > 280 && (

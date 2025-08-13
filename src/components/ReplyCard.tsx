@@ -1,8 +1,7 @@
 import { formatDistanceToNow, format } from 'date-fns';
-import { Zap, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useEventCounts } from '@/hooks/useEventCounts';
@@ -10,6 +9,7 @@ import { genUserName } from '@/lib/genUserName';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NoteContent } from '@/components/NoteContent';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ZapButton } from '@/components/ZapButton';
 
 interface ReplyCardProps {
   event: NostrEvent;
@@ -79,10 +79,12 @@ export function ReplyCard({ event }: ReplyCardProps) {
           )}
 
           <div className="flex items-center justify-between pt-2 border-t">
-            <Button variant="ghost" size="sm" className="h-8 px-2">
-              <Zap className="h-4 w-4 mr-1" />
-              <span className="text-xs">{zapCount}</span>
-            </Button>
+            <ZapButton 
+              target={event}
+              className="h-8 px-2"
+              showCount={true}
+              zapData={{ count: zapCount, totalSats: zapCount * 100, isLoading: false }}
+            />
           </div>
         </div>
       </CardContent>

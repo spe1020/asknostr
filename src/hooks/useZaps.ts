@@ -6,14 +6,13 @@ import { useToast } from '@/hooks/useToast';
 import { useNWC } from '@/hooks/useNWCContext';
 import type { NWCConnection } from '@/hooks/useNWC';
 import { nip57 } from 'nostr-tools';
-import type { Event } from 'nostr-tools';
+import type { NostrEvent } from '@nostrify/nostrify';
 import type { WebLNProvider } from 'webln';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import type { NostrEvent } from '@nostrify/nostrify';
 
 export function useZaps(
-  target: Event | Event[],
+  target: NostrEvent | NostrEvent[],
   webln: WebLNProvider | null,
   _nwcConnection: NWCConnection | null,
   onZapSuccess?: () => void
@@ -181,7 +180,19 @@ export function useZaps(
       }
 
       // Get zap endpoint using the old reliable method
-      const zapEndpoint = await nip57.getZapEndpoint(author.data.event);
+      // Convert NostrEvent to the format expected by nip57
+      const authorEvent = author.data.event;
+      if (!authorEvent) {
+        toast({
+          title: 'Author event not found',
+          description: 'Could not find the author event for zap endpoint.',
+          variant: 'destructive',
+        });
+        setIsZapping(false);
+        return;
+      }
+      
+      const zapEndpoint = await nip57.getZapEndpoint(authorEvent);
       if (!zapEndpoint) {
         toast({
           title: 'Zap endpoint not found',
@@ -201,6 +212,7 @@ export function useZaps(
 
       const zapAmount = amount * 1000; // convert to millisats
 
+      // Convert NostrEvent to the format expected by nip57
       const zapRequest = nip57.makeZapRequest({
         profile: actualTarget.pubkey,
         event: event,
